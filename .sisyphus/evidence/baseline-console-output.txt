@@ -1,0 +1,16 @@
+BASELINE CAPTURE
+================
+Timestamp: 2026-01-31T09:51:39.275Z
+URL: http://localhost:8765
+Page Title: Flugstunden Steuerrechner
+
+Initial DOM Values (before any PDF upload):
+-------------------------------------------
+endVerpflegungDE8h: 0,00 €
+endVerpflegungDE24h: 0,00 €
+endVerpflegungAusland: 0,00 €
+endSummeGesamt: 0,00 €
+===========================================
+
+Note: This is the initial state of the Lufthansa Tax Calculator before any PDF files are uploaded.
+All values default to "0,00 €" as no flight data has been processed.

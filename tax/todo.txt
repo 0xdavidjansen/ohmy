@@ -1,0 +1,4 @@
+EIngabe Fahrzeit zum Flughafen für die Berechnung der tatsächlichen Abwesenheit
+Trinkgelder (Hotelaufenthalte * Pauschale)
+Spesen 
+Reinigungskosten (Arbeitstage * Pauschale pro Tag)

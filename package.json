@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "puppeteer-core": "^24.36.1"
+  },
+  "dependencies": {
+    "canvas": "^3.2.1",
+    "node-html-to-image": "^5.0.0"
+  }
+}

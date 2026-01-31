@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flugstunden Steuerrechner</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            alert('JavaScript Fehler: ' + msg + '\nZeile: ' + line);
+            return false;
+        };
+    </script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Top Navigation -->
+        <header class="top-header">
+            <div class="header-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+                <div class="brand-text">
+                    <h1>Flugstunden Steuerrechner</h1>
+                    <span class="brand-subtitle">Lufthansa Crew</span>
+                </div>
+            </div>
+            <button class="header-info" id="privacyInfoBtn" type="button" title="Mehr erfahren">
+                <svg class="header-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <span>Info</span>
+            </button>
+        </header>
+
+        <!-- Wizard Container -->
+        <main class="wizard-container" data-wizard>
+            <!-- Step Indicator -->
+            <nav class="wizard-progress" aria-label="Fortschritt">
+                <ol class="wizard-steps-indicator">
+                    <li class="wizard-step-indicator active" data-step="1" aria-current="step">
+                        <span class="step-number">1</span>
+                        <span class="step-label">Upload</span>
+                    </li>
+                    <li class="wizard-step-indicator" data-step="2">
+                        <span class="step-number">2</span>
+                        <span class="step-label">Configure</span>
+                    </li>
+                    <li class="wizard-step-indicator" data-step="3">
+                        <span class="step-number">3</span>
+                        <span class="step-label">Results</span>
+                    </li>
+                </ol>
+            </nav>
+
+            <!-- Wizard Content -->
+            <div class="wizard-content">
+                <!-- Warning Banner for Orphaned Continuation Flights -->
+                <div id="continuationWarningBanner" class="warning-banner" style="display: none;">
+                    <div class="warning-banner-content">
+                        <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <div class="warning-text">
+                            <strong>Warnung: Unvollständige Flüge gefunden</strong>
+                            <div id="continuationWarningDetails"></div>
+                        </div>
+                        <button class="warning-close" id="closeWarningBtn" aria-label="Warnung schließen">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <section class="wizard-step active" id="section-upload" data-wizard-step="1" role="region" aria-labelledby="step1-title">
+                    <h2 id="step1-title" class="visually-hidden">Dokumente Upload</h2>
+
+                    <input type="file" id="fileInput" accept=".pdf" multiple hidden>
+
+                    <div class="upload-hero">
+                        <div class="upload-hero-content">
+                            <div class="upload-hero-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                                </svg>
+                            </div>
+
+                            <h1 class="upload-hero-title">Flugstunden Steuerrechner</h1>
+                            <p class="upload-hero-subtitle">Berechnen Sie Ihre steuerlichen Abzüge schnell, sicher und kostenlos.</p>
+
+                            <div class="upload-dropzone" id="uploadDropzone">
+                                <div class="upload-dropzone-inner">
+                                    <div class="upload-dropzone-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                        </svg>
+                                    </div>
+                                    <p class="upload-dropzone-text">PDFs hier ablegen oder klicken zum Hochladen</p>
+                                    <p class="upload-dropzone-subtext">Flugstundenübersicht & Streckeneinsatzabrechnung</p>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn-upload-trigger" id="uploadBtn" hidden>PDF importieren</button>
+
+                            <div class="documents-warnings" id="documentsWarnings"></div>
+
+                            <div class="upload-cards" id="uploadCards">
+                                <div class="upload-cards-column">
+                                    <h3 class="upload-cards-title">
+                                        <svg class="upload-cards-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        Flugstundenübersicht
+                                    </h3>
+                                    <div class="documents-list" id="flugstundenFiles"></div>
+                                </div>
+
+                                <div class="upload-cards-column">
+                                    <h3 class="upload-cards-title">
+                                        <svg class="upload-cards-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                        Streckeneinsatzabrechnung
+                                    </h3>
+                                    <div class="documents-list" id="expenseFiles"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="privacy-badge">
+                            <svg class="privacy-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            <span>Alle Daten bleiben in Ihrem Browser</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 1 Navigation -->
+                    <div class="wizard-nav">
+                        <button type="button" class="btn btn-primary wizard-continue" data-next-step="2">
+                            Weiter zur Konfiguration
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                <polyline points="12 5 19 12 12 19"/>
+                            </svg>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Step 2: Configure -->
+                <section class="wizard-step" data-wizard-step="2" role="region" aria-labelledby="step2-title" hidden>
+                    <h2 id="step2-title" class="visually-hidden">Konfiguration</h2>
+                    <!-- Personal Info Section -->
+                    <div class="content-section" id="section-info" role="region" aria-labelledby="nav-info">
+                        <div class="section-header">
+                            <h2>Einstellungen</h2>
+                            <p class="section-subtitle">Passen Sie die Berechnungsparameter für Ihre Steuererklärung an</p>
+                        </div>
+                        <div class="section-body">
+                            <!-- Personal Info Card -->
+                            <div class="card" id="personalInfoCard">
+                                <h3>Persönliche Informationen</h3>
+                                <div class="info-grid" id="personalInfo"></div>
+                            </div>
+
+                            <!-- Configuration Cards Grid -->
+                            <div class="config-grid">
+                                <!-- Card 1: Distance to Work -->
+                                <div class="config-card">
+                                    <h4 class="config-card-title">
+                                        <svg class="config-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                                        </svg>
+                                        Entfernung zur Arbeit
+                                    </h4>
+                                    <div class="config-input-group">
+                                        <label for="distanceInput" class="config-label">
+                                            Einwegstrecke Wohnung - Arbeitsstätte
+                                        </label>
+                                        <div class="config-number-input">
+                                            <input type="number" id="distanceInput" min="0" step="1" placeholder="0" value="50">
+                                            <span class="config-unit">km</span>
+                                        </div>
+                                        <p class="config-hint">Die Entfernung wird für die Pendlerpauschale verwendet</p>
+                                    </div>
+                                    <div class="config-checkbox-group">
+                                        <label class="config-checkbox">
+                                            <input type="checkbox" id="oneWayCheckbox" checked>
+                                            <span class="config-checkmark">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                            </span>
+                                            <span class="config-checkbox-text">
+                                                <strong>Nur Fahrten zur Arbeit zählen</strong>
+                                                <span class="config-checkbox-hint">A-Markierung in der Flugstundenübersicht</span>
+                                            </span>
+                                        </label>
+                                        <label class="config-checkbox">
+                                            <input type="checkbox" id="medicalCheckbox" checked>
+                                            <span class="config-checkmark">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                            </span>
+                                            <span class="config-checkbox-text">
+                                                <strong>Medical als Fahrt zählen</strong>
+                                                <span class="config-checkbox-hint">ME-Markierung</span>
+                                            </span>
+                                        </label>
+                                        <label class="config-checkbox">
+                                            <input type="checkbox" id="groundDutyCheckbox" checked>
+                                            <span class="config-checkmark">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                            </span>
+                                            <span class="config-checkbox-text">
+                                                <strong>Bodendienst als Fahrt zählen</strong>
+                                                <span class="config-checkbox-hint">RE, EM, DP, DT, SI, TK, SB</span>
+                                            </span>
+                                        </label>
+                                        <label class="config-checkbox">
+                                            <input type="checkbox" id="abroadDaysCheckbox" checked>
+                                            <span class="config-checkmark">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                            </span>
+                                            <span class="config-checkbox-text">
+                                                <strong>Auslandstage als Arbeitstag zählen</strong>
+                                                <span class="config-checkbox-hint">FL-Markierung</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="distance-result" id="distanceResult"></div>
+                                </div>
+
+                                <!-- Card 2: Flat Rates -->
+                                <div class="config-card">
+                                    <h4 class="config-card-title">
+                                        <svg class="config-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                        Pauschalen
+                                    </h4>
+                                    <div class="config-input-group">
+                                        <label for="reinigungInput" class="config-label">
+                                            Reinigungskosten (Arbeitskleidung)
+                                        </label>
+                                        <div class="config-number-input">
+                                            <input type="number" id="reinigungInput" min="0" step="0.01" placeholder="1,60" value="1.60">
+                                            <span class="config-unit">€ / Tag</span>
+                                        </div>
+                                        <p class="config-hint">Pauschale für Reinigung der Uniform pro Arbeitstag</p>
+                                    </div>
+                                    <div class="reinigung-result" id="reinigungResult"></div>
+                                    <div class="config-input-group" style="margin-top: 24px;">
+                                        <label for="trinkgeldInput" class="config-label">
+                                            Trinkgeld (Hotelaufenthalt)
+                                        </label>
+                                        <div class="config-number-input">
+                                            <input type="number" id="trinkgeldInput" min="0" step="0.01" placeholder="3,60" value="3.60">
+                                            <span class="config-unit">€ / Nacht</span>
+                                        </div>
+                                        <p class="config-hint">Werbliche Betriebsausgabe für Trinkgelder bei Übernachtungen</p>
+                                    </div>
+                                    <div class="trinkgeld-result" id="trinkgeldResult"></div>
+                                    <div class="config-input-group" style="margin-top: 24px;">
+                                        <label for="fahrzeitInput" class="config-label config-label-with-tooltip">
+                                            <span>Fahrzeit zum Flughafen</span>
+                                            <span class="tooltip-trigger" data-tooltip="Geben Sie Ihre typische Fahrzeit von zu Hause zum Flughafen ein. Diese Zeit wird bei der Berechnung berücksichtigt, ob Sie am An- und Abreisetag die 8-Stunden-Abwesenheitsgrenze erreichen.">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <circle cx="12" cy="12" r="10"/>
+                                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                                </svg>
+                                            </span>
+                                        </label>
+                                        <div class="config-number-input">
+                                            <input type="number" id="fahrzeitInput" min="0" max="240" step="1" placeholder="0" value="0">
+                                            <span class="config-unit">Minuten</span>
+                                        </div>
+                                        <p class="config-hint">Die Fahrzeit wird sowohl am Abflugtag als auch am Rückkehrtag zur Abwesenheitsdauer hinzugerechnet, um die >8h-Grenze für den Verpflegungsmehraufwand zu bestimmen.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Step 2 Navigation -->
+                    <div class="wizard-nav">
+                        <button type="button" class="btn btn-secondary wizard-back" data-prev-step="1">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="19" y1="12" x2="5" y2="12"/>
+                                <polyline points="12 19 5 12 12 5"/>
+                            </svg>
+                            Zurück
+                        </button>
+                        <button type="button" class="btn btn-primary wizard-continue" data-next-step="3">
+                            Berechnung starten
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                <polyline points="12 5 19 12 12 19"/>
+                            </svg>
+                        </button>
+                    </div>
+                </section>
+
+                                <!-- Step 3: Results -->
+                <section class="wizard-step" data-wizard-step="3" role="region" aria-labelledby="step3-title" hidden>
+                    <h2 id="step3-title" class="visually-hidden">Ergebnisse</h2>
+
+                    <!-- Results Hero -->
+                    <div class="results-hero">
+                        <div class="results-hero-content">
+                            <span class="results-hero-label">Ihre Steuerersparnis</span>
+                            <div class="results-total" id="endSummeGesamt">0,00 €</div>
+                            <span class="results-hero-sublabel">Gesamtbetrag absetzbar</span>
+                        </div>
+                    </div>
+
+                    <!-- Category Cards -->
+                    <div class="results-categories">
+                        <div class="results-category-card category-fahrt">
+                            <div class="category-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                                </svg>
+                            </div>
+                            <div class="category-content">
+                                <span class="category-label">Fahrtkosten</span>
+                                <span class="category-value" id="cardFahrtkosten">0,00 €</span>
+                            </div>
+                        </div>
+                        <div class="results-category-card category-verpflegung">
+                            <div class="category-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6l3 1m0 0l-3 9a5 5 0 0 0 6.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5 5 0 0 0 6.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                                </svg>
+                            </div>
+                            <div class="category-content">
+                                <span class="category-label">Verpflegung</span>
+                                <span class="category-value" id="cardVerpflegung">0,00 €</span>
+                            </div>
+                        </div>
+                        <div class="results-category-card category-sonstiges">
+                            <div class="category-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="1" x2="12" y2="23"/>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
+                            <div class="category-content">
+                                <span class="category-label">Sonstiges</span>
+                                <span class="category-value" id="cardSonstiges">0,00 €</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Section -->
+                    <div class="content-section" id="section-summary" role="region" aria-labelledby="nav-summary">
+                        <div class="section-header">
+                            <h2>Übersicht</h2>
+                        </div>
+                        <div class="section-body">
+                            <!-- Monthly Details - Collapsible -->
+                            <div class="collapsible-section">
+                                <div class="collapsible-header" data-collapsible="monthly">
+                                    <div class="collapsible-title">
+                                        <svg class="collapsible-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                        </svg>
+                                        Details pro Monat
+                                    </div>
+                                    <svg class="collapsible-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                                <div class="collapsible-content" id="collapsible-monthly">
+                                    <div class="card">
+                                        <div class="table-container">
+                                            <table id="monthlyTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Monat</th>
+                                                        <th>Flugstunden</th>
+                                                        <th>Arbeitstage</th>
+                                                        <th>Fahrten</th>
+                                                        <th>Entfernungspauschale</th>
+                                                        <th>Verpflegungsmehraufwand</th>
+                                                        <th>Trinkgeld</th>
+                                                        <th>Reinigungskosten</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                        <p class="table-empty" id="monthlyTableEmpty" hidden>Noch keine Monatsdetails verfügbar.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Endabrechnung - Expanded by default -->
+                            <div class="collapsible-section expanded">
+                                <div class="collapsible-header" data-collapsible="endabrechnung">
+                                    <div class="collapsible-title">
+                                        <svg class="collapsible-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="20" x2="18" y2="10"/>
+                                            <line x1="12" y1="20" x2="12" y2="4"/>
+                                            <line x1="6" y1="20" x2="6" y2="14"/>
+                                        </svg>
+                                        Endabrechnung
+                                    </div>
+                                    <svg class="collapsible-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                                <div class="collapsible-content" id="collapsible-endabrechnung">
+                                    <div class="card">
+                                        <!-- Reinigungskosten (Zeile 57) -->
+                                        <div class="endabrechnung-section">
+                                            <h4>Reinigungskosten (Zeile 57)</h4>
+                                            <table class="endabrechnung-table" id="endabrechnungReinigung">
+                                                <tbody>
+                                                    <tr><td>Arbeitstage</td><td id="endReinigungTage">0</td></tr>
+                                                    <tr><td>Pauschale pro Tag</td><td id="endReinigungPauschale">0,00 €</td></tr>
+                                                    <tr class="total-row"><td>Gesamt</td><td id="endReinigungGesamt">0,00 €</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!-- Reisenebenkosten (Zeile 71) -->
+                                        <div class="endabrechnung-section">
+                                            <h4>Reisenebenkosten (Zeile 71)</h4>
+                                            <table class="endabrechnung-table" id="endabrechnungReisenebenkosten">
+                                                <tbody>
+                                                    <tr><td>Trinkgeld (Hotel)</td><td id="endTrinkgeldLabel">0 Nächte × 0,00 €</td></tr>
+                                                    <tr class="total-row"><td>Gesamt</td><td id="endTrinkgeldGesamt">0,00 €</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!-- Fahrtkosten -->
+                                        <div class="endabrechnung-section">
+                                            <h4>Fahrtkosten</h4>
+                                            <table class="endabrechnung-table" id="endabrechnungFahrtkosten">
+                                                <tbody>
+                                                    <tr><td>Gesamte Kilometer gefahren</td><td id="endFahrtKilometer">0 km</td></tr>
+                                                    <tr><td>Berechnung</td><td id="endFahrtBerechnung">-</td></tr>
+                                                    <tr class="total-row"><td>Fahrtkosten (gesamt)</td><td id="endFahrtGesamt">0,00 €</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!-- Verpflegungsmehraufwendungen bei Auswärtstätigkeiten -->
+                                        <div class="endabrechnung-section">
+                                            <h4>Verpflegungsmehraufwendungen bei Auswärtstätigkeiten</h4>
+                                            <table class="endabrechnung-table" id="endabrechnungVerpflegung">
+                                                <tbody>
+                                                    <tr><td>Pauschalen Deutschland (&gt; 8h)</td><td id="endVerpflegungDE8h">0,00 €</td></tr>
+                                                    <tr><td>Pauschalen Deutschland (24h)</td><td id="endVerpflegungDE24h">0,00 €</td></tr>
+                                                    <tr><td>Pauschalen Ausland</td><td id="endVerpflegungAusland">0,00 €</td></tr>
+                                                    <tr><td>Summe Verpflegungsmehraufwendungen</td><td id="endVerpflegungSumme">0,00 €</td></tr>
+                                                    <tr><td>Arbeitgeber steuerfrei erstattet (Zeile 57)</td><td id="endVerpflegungErstattet">- 0,00 €</td></tr>
+                                                    <tr class="total-row"><td>Differenz (abzugsfähig)</td><td id="endVerpflegungDifferenz">0,00 €</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!-- Endabrechnung Summe -->
+                                        <div class="endabrechnung-section">
+                                            <h4>Endabrechnung Summe</h4>
+                                            <table class="endabrechnung-table" id="endabrechnungSumme">
+                                                <tbody>
+                                                    <tr><td>Reinigungskosten</td><td id="endSummeReinigung">0,00 €</td></tr>
+                                                    <tr><td>Trinkgeld (Hotel)</td><td id="endSummeTrinkgeld">0,00 €</td></tr>
+                                                    <tr><td>Fahrtkosten</td><td id="endSummeFahrtkosten">0,00 €</td></tr>
+                                                    <tr><td>Verpflegungsdifferenz</td><td id="endSummeVerpflegung">0,00 €</td></tr>
+                                                    <tr class="total-row"><td>Gesamtsumme</td><td id="endSummeGesamtTotal">0,00 €</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flights Section -->
+                    <div class="content-section" id="section-flights" role="region" aria-labelledby="nav-flights">
+                        <div class="section-header">
+                            <h2>Arbeitstage Details</h2>
+                        </div>
+                        <div class="section-body">
+                            <div class="collapsible-section">
+                                <div class="collapsible-header" data-collapsible="flights">
+                                    <div class="collapsible-title">
+                                        <svg class="collapsible-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                                        </svg>
+                                        Flugdetails
+                                    </div>
+                                    <svg class="collapsible-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                                <div class="collapsible-content" id="collapsible-flights">
+                                    <div class="card">
+                                        <div class="filter-bar">
+                                            <button id="expandAllFlights" class="btn-expand-all">Alle ausklappen</button>
+                                            <select id="countryFilter">
+                                                <option value="all">Alle Länder</option>
+                                            </select>
+                                        </div>
+                                        <div class="table-container">
+                                            <table id="flightTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Datum</th>
+                                                        <th>Code</th>
+                                                        <th>Flug</th>
+                                                        <th>Route</th>
+                                                        <th>Land</th>
+                                                        <th>Block Zeit</th>
+                                                        <th>Flugzeit</th>
+                                                        <th>Tagessatz</th>
+                                                        <th>Trinkgeld</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                        <p class="table-empty" id="flightTableEmpty" hidden>Noch keine Arbeitstage verfügbar. Bitte importieren Sie eine Flugstundenübersicht.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expenses Section -->
+                    <div class="content-section" id="section-expenses" role="region" aria-labelledby="nav-expenses">
+                        <div class="section-header">
+                            <h2>Spesenabrechnungen</h2>
+                        </div>
+                        <div class="section-body">
+                            <div class="collapsible-section">
+                                <div class="collapsible-header" data-collapsible="expenses">
+                                    <div class="collapsible-title">
+                                        <svg class="collapsible-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                        Steuerfreie Spesen
+                                    </div>
+                                    <svg class="collapsible-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </div>
+                                <div class="collapsible-content" id="collapsible-expenses">
+                                    <!-- Tax-Free Summary from Streckeneinsatzabrechnungen -->
+                                    <div class="card" id="expenseMonthlySummaryCard">
+                                        <h3>Steuerfreie Spesen (Anlage N, Zeile 57)</h3>
+                                        <p class="expense-summary-info">Diese Beträge wurden vom Arbeitgeber steuerfrei erstattet.</p>
+                                        <div class="table-container">
+                                            <table id="expenseMonthlySummaryTable" class="expense-summary-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Dokument</th>
+                                                        <th>Spesenanspruch</th>
+                                                        <th>Steuer</th>
+                                                        <th>Werbko</th>
+                                                        <th>Steuerfrei</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                        <p class="table-empty" id="expenseSummaryEmpty" hidden>Noch keine Spesenübersicht verfügbar.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Section -->
+                    <div class="content-section" id="section-export" role="region" aria-labelledby="nav-export">
+                        <div class="section-header">
+                            <h2>Export für Steuererklärung</h2>
+                        </div>
+                        <div class="section-body">
+                            <div class="card export-card">
+                                <p class="export-description">Exportieren Sie Ihre Daten für die Steuererklärung in verschiedenen Formaten.</p>
+                                <div class="export-buttons">
+                                    <button type="button" class="btn btn-primary" onclick="exportCSV()">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14 2 14 8 20 8"/>
+                                            <line x1="16" y1="13" x2="8" y2="13"/>
+                                            <line x1="16" y1="17" x2="8" y2="17"/>
+                                            <polyline points="10 9 9 9 8 9"/>
+                                        </svg>
+                                        CSV Export
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="exportSummary()">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14 2 14 8 20 8"/>
+                                        </svg>
+                                        Zusammenfassung (TXT)
+                                    </button>
+                                    <button type="button" class="btn btn-outline" onclick="printResults()">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 6 2 18 2 18 9"/>
+                                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                            <rect x="6" y="14" width="12" height="8"/>
+                                        </svg>
+                                        Drucken
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 Navigation -->
+                    <div class="wizard-nav">
+                        <button type="button" class="btn btn-secondary wizard-back" data-prev-step="2">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="19" y1="12" x2="5" y2="12"/>
+                                <polyline points="12 19 5 12 12 5"/>
+                            </svg>
+                            Zurück
+                        </button>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Privacy Modal -->
+    <div class="modal-overlay" id="privacyModal" role="dialog" aria-modal="true" aria-labelledby="privacyModalTitle" aria-hidden="true">
+        <div class="modal-content" tabindex="-1">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                </div>
+                <h3 id="privacyModalTitle">Info</h3>
+                <button class="modal-close" id="privacyModalClose" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-section">
+                    <div class="privacy-item">
+                        <div class="privacy-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                        </div>
+                        <div class="privacy-text">
+                            <strong>Keine Server-Übertragung</strong>
+                            <p>Ihre PDF-Dateien werden ausschließlich in Ihrem Browser verarbeitet. Es werden keine Daten an einen Server gesendet.</p>
+                        </div>
+                    </div>
+                    <div class="privacy-item">
+                        <div class="privacy-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                        </div>
+                        <div class="privacy-text">
+                            <strong>Keine Datenspeicherung</strong>
+                            <p>Nach dem Schließen des Browsers werden alle Daten automatisch gelöscht. Es werden keine Informationen gespeichert.</p>
+                        </div>
+                    </div>
+                    <div class="privacy-item">
+                        <div class="privacy-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                        </div>
+                        <div class="privacy-text">
+                            <strong>Keine Cookies oder Tracking</strong>
+                            <p>Diese Anwendung verwendet keine Cookies, kein Tracking und keine Analysedienste.</p>
+                        </div>
+                    </div>
+                    <div class="privacy-item">
+                        <div class="privacy-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                        </div>
+                        <div class="privacy-text">
+                            <strong>Offline-fähig</strong>
+                            <p>Nach dem ersten Laden funktioniert die Anwendung auch ohne Internetverbindung (außer für Länderflaggen).</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="privacy-note">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <p>Ihre sensiblen Gehaltsdaten, Flugzeiten und persönlichen Informationen verlassen niemals Ihren Computer. Die gesamte Verarbeitung erfolgt lokal mit JavaScript in Ihrem Browser.</p>
+                </div>
+                <div class="privacy-note" style="margin-top: 12px; background: rgba(221, 107, 32, 0.1); border-color: rgba(221, 107, 32, 0.3);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <p>Dieses Tool wurde mit KI-Unterstützung entwickelt (vibe coded). Benutzung auf eigene Gefahr - bitte Berechnungen immer mit offiziellen Steuerdokumenten überprüfen.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite" aria-hidden="true">
+        <div class="spinner"></div>
+        <p>PDF wird verarbeitet...</p>
+    </div>
+
+    <script src="airports.js"></script>
+    <script src="allowances.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Top Navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = Array.from(document.querySelectorAll('.nav-item[data-section]'));
+            const sections = Array.from(document.querySelectorAll('.content-section'));
+            if (navItems.length === 0 || sections.length === 0) {
+                return;
+            }
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInput = document.getElementById('fileInput');
+            const privacyBtn = document.getElementById('privacyInfoBtn');
+            const privacyModal = document.getElementById('privacyModal');
+            const privacyModalClose = document.getElementById('privacyModalClose');
+            const privacyModalContent = document.querySelector('#privacyModal .modal-content');
+            let lastFocusedElement = null;
+
+            const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+            /* OLD TAB NAVIGATION - REPLACED BY WIZARD
+            const setActiveSection = (targetSection) => {
+                navItems.forEach(nav => {
+                    const isActive = nav.getAttribute('data-section') === targetSection;
+                    nav.classList.toggle('active', isActive);
+                    nav.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                    nav.setAttribute('tabindex', isActive ? '0' : '-1');
+                });
+
+                sections.forEach(section => {
+                    const isActive = section.id === 'section-' + targetSection;
+                    section.classList.toggle('active', isActive);
+                    section.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                    if (isActive) {
+                        section.removeAttribute('tabindex');
+                    } else {
+                        section.setAttribute('tabindex', '-1');
+                    }
+                });
+            };
+            */
+
+            const handleModalKeydown = (event) => {
+                if (!privacyModal || !privacyModal.classList.contains('active')) return;
+
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closePrivacyModal();
+                    return;
+                }
+
+                if (event.key !== 'Tab') return;
+
+                const focusable = Array.from(privacyModal.querySelectorAll(focusableSelector));
+                if (focusable.length === 0) return;
+
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            };
+
+            const openPrivacyModal = () => {
+                if (!privacyModal) return;
+                lastFocusedElement = document.activeElement;
+                privacyModal.classList.add('active');
+                privacyModal.setAttribute('aria-hidden', 'false');
+                if (privacyModalContent) {
+                    privacyModalContent.focus();
+                }
+                document.addEventListener('keydown', handleModalKeydown);
+            };
+
+            const closePrivacyModal = () => {
+                if (!privacyModal) return;
+                privacyModal.classList.remove('active');
+                privacyModal.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', handleModalKeydown);
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                }
+            };
+
+            const uploadDropzone = document.getElementById('uploadDropzone');
+
+            if (uploadDropzone && fileInput) {
+                uploadDropzone.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileInput.click();
+                });
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    uploadDropzone.addEventListener(eventName, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    uploadDropzone.addEventListener(eventName, function() {
+                        uploadDropzone.classList.add('drag-over');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    uploadDropzone.addEventListener(eventName, function(e) {
+                        if (eventName === 'dragleave' && !uploadDropzone.contains(e.relatedTarget)) {
+                            uploadDropzone.classList.remove('drag-over');
+                        } else if (eventName === 'drop') {
+                            uploadDropzone.classList.remove('drag-over');
+                        }
+                    }, false);
+                });
+
+                uploadDropzone.addEventListener('drop', function(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (fileInput) {
+                        fileInput.files = files;
+                        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }, false);
+            }
+
+            // Privacy modal
+            if (privacyBtn && privacyModal) {
+                privacyBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openPrivacyModal();
+                });
+
+                if (privacyModalClose) {
+                    privacyModalClose.addEventListener('click', closePrivacyModal);
+                }
+
+                privacyModal.addEventListener('click', function(e) {
+                    if (e.target === privacyModal) {
+                        closePrivacyModal();
+                    }
+                });
+            }
+
+            /* OLD TAB NAVIGATION - REPLACED BY WIZARD
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetSection = this.getAttribute('data-section');
+                    setActiveSection(targetSection);
+                });
+
+                item.addEventListener('keydown', function(e) {
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        const direction = e.key === 'ArrowRight' ? 1 : -1;
+                        const currentIndex = navItems.indexOf(this);
+                        const nextIndex = (currentIndex + direction + navItems.length) % navItems.length;
+                        navItems[nextIndex].focus();
+                    }
+
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        const targetSection = this.getAttribute('data-section');
+                        setActiveSection(targetSection);
+                    }
+                });
+            });
+            */
+        });
+    </script>
+</body>
+</html>
