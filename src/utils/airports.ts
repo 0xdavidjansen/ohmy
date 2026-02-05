@@ -1,0 +1,532 @@
+// Airport IATA codes to country mapping
+// Common airports for German airline crews
+
+export const AIRPORT_COUNTRIES: Record<string, string> = {
+  // Germany (DE)
+  FRA: 'DE', // Frankfurt
+  MUC: 'DE', // Munich
+  DUS: 'DE', // Düsseldorf
+  TXL: 'DE', // Berlin Tegel (closed)
+  BER: 'DE', // Berlin Brandenburg
+  HAM: 'DE', // Hamburg
+  CGN: 'DE', // Cologne/Bonn
+  STR: 'DE', // Stuttgart
+  HAJ: 'DE', // Hannover
+  NUE: 'DE', // Nuremberg
+  LEJ: 'DE', // Leipzig
+  DRS: 'DE', // Dresden
+  DTM: 'DE', // Dortmund
+  FMO: 'DE', // Münster/Osnabrück
+  PAD: 'DE', // Paderborn
+  SCN: 'DE', // Saarbrücken
+  FDH: 'DE', // Friedrichshafen
+  FKB: 'DE', // Karlsruhe/Baden-Baden
+  HHN: 'DE', // Frankfurt-Hahn
+  NRN: 'DE', // Weeze
+  ERF: 'DE', // Erfurt
+  RLG: 'DE', // Rostock
+  GWT: 'DE', // Sylt
+  BRE: 'DE', // Bremen
+
+  // Austria (AT)
+  VIE: 'AT', // Vienna
+  SZG: 'AT', // Salzburg
+  INN: 'AT', // Innsbruck
+  GRZ: 'AT', // Graz
+  LNZ: 'AT', // Linz
+  KLU: 'AT', // Klagenfurt
+
+  // Switzerland (CH)
+  ZRH: 'CH', // Zurich
+  GVA: 'CH', // Geneva
+  BSL: 'CH', // Basel (EuroAirport)
+
+  // United Kingdom (GB)
+  LHR: 'GB', // London Heathrow
+  LGW: 'GB', // London Gatwick
+  STN: 'GB', // London Stansted
+  LTN: 'GB', // London Luton
+  LCY: 'GB', // London City
+  MAN: 'GB', // Manchester
+  BHX: 'GB', // Birmingham
+  EDI: 'GB', // Edinburgh
+  GLA: 'GB', // Glasgow
+  BRS: 'GB', // Bristol
+  NCL: 'GB', // Newcastle
+  LPL: 'GB', // Liverpool
+  EMA: 'GB', // East Midlands
+  ABZ: 'GB', // Aberdeen
+  BFS: 'GB', // Belfast
+
+  // France (FR)
+  CDG: 'FR', // Paris Charles de Gaulle
+  ORY: 'FR', // Paris Orly
+  NCE: 'FR', // Nice
+  LYS: 'FR', // Lyon
+  MRS: 'FR', // Marseille
+  TLS: 'FR', // Toulouse
+  BOD: 'FR', // Bordeaux
+  NTE: 'FR', // Nantes
+  SXB: 'FR', // Strasbourg
+  LIL: 'FR', // Lille
+  MPL: 'FR', // Montpellier
+  BIQ: 'FR', // Biarritz
+
+  // Italy (IT)
+  FCO: 'IT', // Rome Fiumicino
+  MXP: 'IT', // Milan Malpensa
+  LIN: 'IT', // Milan Linate
+  VCE: 'IT', // Venice
+  NAP: 'IT', // Naples
+  BGY: 'IT', // Milan Bergamo
+  BLQ: 'IT', // Bologna
+  FLR: 'IT', // Florence
+  PSA: 'IT', // Pisa
+  TRN: 'IT', // Turin
+  CTA: 'IT', // Catania
+  PMO: 'IT', // Palermo
+  CAG: 'IT', // Cagliari
+  OLB: 'IT', // Olbia
+  VRN: 'IT', // Verona
+  GOA: 'IT', // Genoa
+  BRI: 'IT', // Bari
+
+  // Spain (ES)
+  MAD: 'ES', // Madrid
+  BCN: 'ES', // Barcelona
+  PMI: 'ES', // Palma de Mallorca
+  AGP: 'ES', // Malaga
+  ALC: 'ES', // Alicante
+  VLC: 'ES', // Valencia
+  SVQ: 'ES', // Seville
+  BIO: 'ES', // Bilbao
+  TFN: 'ES', // Tenerife North
+  TFS: 'ES', // Tenerife South
+  LPA: 'ES', // Gran Canaria
+  ACE: 'ES', // Lanzarote
+  FUE: 'ES', // Fuerteventura
+  IBZ: 'ES', // Ibiza
+  MAH: 'ES', // Menorca
+  SCQ: 'ES', // Santiago de Compostela
+
+  // Portugal (PT)
+  LIS: 'PT', // Lisbon
+  OPO: 'PT', // Porto
+  FAO: 'PT', // Faro
+  FNC: 'PT', // Madeira
+  PDL: 'PT', // Ponta Delgada (Azores)
+
+  // Netherlands (NL)
+  AMS: 'NL', // Amsterdam
+  RTM: 'NL', // Rotterdam
+  EIN: 'NL', // Eindhoven
+  MST: 'NL', // Maastricht
+
+  // Belgium (BE)
+  BRU: 'BE', // Brussels
+  CRL: 'BE', // Charleroi
+  ANR: 'BE', // Antwerp
+  LGG: 'BE', // Liège
+
+  // Luxembourg (LU)
+  LUX: 'LU', // Luxembourg
+
+  // Ireland (IE)
+  DUB: 'IE', // Dublin
+  SNN: 'IE', // Shannon
+  ORK: 'IE', // Cork
+
+  // Denmark (DK)
+  CPH: 'DK', // Copenhagen
+  BLL: 'DK', // Billund
+  AAL: 'DK', // Aalborg
+
+  // Sweden (SE)
+  ARN: 'SE', // Stockholm Arlanda
+  GOT: 'SE', // Gothenburg
+  MMX: 'SE', // Malmö
+  BMA: 'SE', // Stockholm Bromma
+
+  // Norway (NO)
+  OSL: 'NO', // Oslo
+  BGO: 'NO', // Bergen
+  TRD: 'NO', // Trondheim
+  SVG: 'NO', // Stavanger
+  TOS: 'NO', // Tromsø
+
+  // Finland (FI)
+  HEL: 'FI', // Helsinki
+  OUL: 'FI', // Oulu
+  TMP: 'FI', // Tampere
+  TKU: 'FI', // Turku
+  RVN: 'FI', // Rovaniemi
+
+  // Iceland (IS)
+  KEF: 'IS', // Reykjavik Keflavik
+  RKV: 'IS', // Reykjavik
+
+  // Poland (PL)
+  WAW: 'PL', // Warsaw
+  KRK: 'PL', // Krakow
+  GDN: 'PL', // Gdansk
+  WRO: 'PL', // Wroclaw
+  POZ: 'PL', // Poznan
+  KTW: 'PL', // Katowice
+
+  // Czech Republic (CZ)
+  PRG: 'CZ', // Prague
+  BRQ: 'CZ', // Brno
+
+  // Hungary (HU)
+  BUD: 'HU', // Budapest
+
+  // Romania (RO)
+  OTP: 'RO', // Bucharest
+  CLJ: 'RO', // Cluj-Napoca
+
+  // Bulgaria (BG)
+  SOF: 'BG', // Sofia
+  VAR: 'BG', // Varna
+  BOJ: 'BG', // Burgas
+
+  // Greece (GR)
+  ATH: 'GR', // Athens
+  SKG: 'GR', // Thessaloniki
+  HER: 'GR', // Heraklion (Crete)
+  RHO: 'GR', // Rhodes
+  CFU: 'GR', // Corfu
+  JMK: 'GR', // Mykonos
+  JTR: 'GR', // Santorini
+  KGS: 'GR', // Kos
+  CHQ: 'GR', // Chania
+
+  // Turkey (TR)
+  IST: 'TR', // Istanbul
+  SAW: 'TR', // Istanbul Sabiha Gökçen
+  ESB: 'TR', // Ankara
+  AYT: 'TR', // Antalya
+  ADB: 'TR', // Izmir
+  DLM: 'TR', // Dalaman
+  BJV: 'TR', // Bodrum
+
+  // Croatia (HR)
+  ZAG: 'HR', // Zagreb
+  SPU: 'HR', // Split
+  DBV: 'HR', // Dubrovnik
+  PUY: 'HR', // Pula
+
+  // Slovenia (SI)
+  LJU: 'SI', // Ljubljana
+
+  // Serbia (RS)
+  BEG: 'RS', // Belgrade
+
+  // Montenegro (ME)
+  TGD: 'ME', // Podgorica
+  TIV: 'ME', // Tivat
+
+  // Bosnia and Herzegovina (BA)
+  SJJ: 'BA', // Sarajevo
+
+  // Albania (AL)
+  TIA: 'AL', // Tirana
+
+  // North Macedonia (MK)
+  SKP: 'MK', // Skopje
+
+  // Cyprus (CY)
+  LCA: 'CY', // Larnaca
+  PFO: 'CY', // Paphos
+
+  // Malta (MT)
+  MLA: 'MT', // Malta
+
+  // Russia (RU)
+  SVO: 'RU', // Moscow Sheremetyevo
+  DME: 'RU', // Moscow Domodedovo
+  VKO: 'RU', // Moscow Vnukovo
+  LED: 'RU', // St. Petersburg
+
+  // Ukraine (UA)
+  KBP: 'UA', // Kyiv Boryspil
+  IEV: 'UA', // Kyiv Zhuliany
+  ODS: 'UA', // Odessa
+
+  // Middle East
+  DXB: 'AE', // Dubai
+  AUH: 'AE', // Abu Dhabi
+  SHJ: 'AE', // Sharjah
+  DOH: 'QA', // Doha
+  BAH: 'BH', // Bahrain
+  KWI: 'KW', // Kuwait
+  MCT: 'OM', // Muscat
+  JED: 'SA', // Jeddah
+  RUH: 'SA', // Riyadh
+  TLV: 'IL', // Tel Aviv
+  AMM: 'JO', // Amman
+  BEY: 'LB', // Beirut
+  CAI: 'EG', // Cairo
+  HRG: 'EG', // Hurghada
+  SSH: 'EG', // Sharm El Sheikh
+
+  // Africa
+  CMN: 'MA', // Casablanca
+  RAK: 'MA', // Marrakech
+  AGA: 'MA', // Agadir
+  TUN: 'TN', // Tunis
+  DJE: 'TN', // Djerba
+  ALG: 'DZ', // Algiers
+  NBO: 'KE', // Nairobi
+  MBA: 'KE', // Mombasa
+  ADD: 'ET', // Addis Ababa
+  JNB: 'ZA', // Johannesburg
+  CPT: 'ZA', // Cape Town
+  DUR: 'ZA', // Durban
+  LOS: 'NG', // Lagos
+  ABJ: 'CI', // Abidjan
+  ACC: 'GH', // Accra
+  DAR: 'TZ', // Dar es Salaam
+  MRU: 'MU', // Mauritius
+  SEZ: 'SC', // Seychelles
+
+  // Asia
+  PEK: 'CN', // Beijing
+  PVG: 'CN', // Shanghai Pudong
+  SHA: 'CN', // Shanghai Hongqiao
+  CAN: 'CN', // Guangzhou
+  HKG: 'HK', // Hong Kong
+  TPE: 'TW', // Taipei
+  NRT: 'JP', // Tokyo Narita
+  HND: 'JP', // Tokyo Haneda
+  KIX: 'JP', // Osaka Kansai
+  ICN: 'KR', // Seoul Incheon
+  GMP: 'KR', // Seoul Gimpo
+  SIN: 'SG', // Singapore
+  BKK: 'TH', // Bangkok Suvarnabhumi
+  DMK: 'TH', // Bangkok Don Mueang
+  HKT: 'TH', // Phuket
+  KUL: 'MY', // Kuala Lumpur
+  CGK: 'ID', // Jakarta
+  DPS: 'ID', // Bali
+  MNL: 'PH', // Manila
+  CEB: 'PH', // Cebu
+  HAN: 'VN', // Hanoi
+  SGN: 'VN', // Ho Chi Minh City
+  DEL: 'IN', // Delhi
+  BOM: 'IN', // Mumbai
+  BLR: 'IN', // Bangalore
+  MAA: 'IN', // Chennai
+  CMB: 'LK', // Colombo
+  MLE: 'MV', // Maldives
+  KTM: 'NP', // Kathmandu
+  DAC: 'BD', // Dhaka
+  KHI: 'PK', // Karachi
+  ISB: 'PK', // Islamabad
+  LHE: 'PK', // Lahore
+  TAS: 'UZ', // Tashkent
+  ALA: 'KZ', // Almaty
+  NQZ: 'KZ', // Astana (Nur-Sultan)
+  TBS: 'GE', // Tbilisi
+  EVN: 'AM', // Yerevan
+  GYD: 'AZ', // Baku
+
+  // Americas
+  JFK: 'US', // New York JFK
+  EWR: 'US', // Newark
+  LGA: 'US', // New York LaGuardia
+  LAX: 'US', // Los Angeles
+  SFO: 'US', // San Francisco
+  ORD: 'US', // Chicago O'Hare
+  MIA: 'US', // Miami
+  DFW: 'US', // Dallas/Fort Worth
+  ATL: 'US', // Atlanta
+  DEN: 'US', // Denver
+  SEA: 'US', // Seattle
+  BOS: 'US', // Boston
+  IAD: 'US', // Washington Dulles
+  DCA: 'US', // Washington Reagan
+  PHL: 'US', // Philadelphia
+  IAH: 'US', // Houston
+  PHX: 'US', // Phoenix
+  SAN: 'US', // San Diego
+  LAS: 'US', // Las Vegas
+  MCO: 'US', // Orlando
+  DTW: 'US', // Detroit
+  MSP: 'US', // Minneapolis
+  YYZ: 'CA', // Toronto
+  YVR: 'CA', // Vancouver
+  YUL: 'CA', // Montreal
+  YYC: 'CA', // Calgary
+  YOW: 'CA', // Ottawa
+  MEX: 'MX', // Mexico City
+  CUN: 'MX', // Cancun
+  GDL: 'MX', // Guadalajara
+  HAV: 'CU', // Havana
+  VRA: 'CU', // Varadero
+  PUJ: 'DO', // Punta Cana
+  SDQ: 'DO', // Santo Domingo
+  SJU: 'PR', // San Juan
+  PTY: 'PA', // Panama City
+  SJO: 'CR', // San Jose (Costa Rica)
+  BOG: 'CO', // Bogota
+  MDE: 'CO', // Medellin
+  CTG: 'CO', // Cartagena
+  LIM: 'PE', // Lima
+  CUZ: 'PE', // Cusco
+  SCL: 'CL', // Santiago
+  GRU: 'BR', // Sao Paulo
+  GIG: 'BR', // Rio de Janeiro
+  BSB: 'BR', // Brasilia
+  EZE: 'AR', // Buenos Aires
+  AEP: 'AR', // Buenos Aires Aeroparque
+  MVD: 'UY', // Montevideo
+  CCS: 'VE', // Caracas
+  UIO: 'EC', // Quito
+  GYE: 'EC', // Guayaquil
+  LPB: 'BO', // La Paz
+  ASU: 'PY', // Asuncion
+
+  // Caribbean
+  MBJ: 'JM', // Montego Bay
+  KIN: 'JM', // Kingston
+  NAS: 'BS', // Nassau
+  BGI: 'BB', // Barbados
+  AUA: 'AW', // Aruba
+  CUR: 'CW', // Curacao
+  SXM: 'SX', // St. Maarten
+  POS: 'TT', // Port of Spain
+
+  // Oceania
+  SYD: 'AU', // Sydney
+  MEL: 'AU', // Melbourne
+  BNE: 'AU', // Brisbane
+  PER: 'AU', // Perth
+  AKL: 'NZ', // Auckland
+  WLG: 'NZ', // Wellington
+  CHC: 'NZ', // Christchurch
+  NAN: 'FJ', // Fiji
+  PPT: 'PF', // Tahiti
+  DRW: 'AU', // Darwin
+  ADL: 'AU', // Adelaide
+  OOL: 'AU', // Gold Coast
+  CNS: 'AU', // Cairns
+};
+
+/**
+ * Get country code for an airport IATA code
+ */
+export function getCountryFromAirport(iataCode: string): string {
+  const code = iataCode.toUpperCase().trim();
+  return AIRPORT_COUNTRIES[code] || 'XX'; // XX for unknown
+}
+
+/**
+ * Check if an airport is in Germany
+ */
+export function isDomesticAirport(iataCode: string): boolean {
+  return getCountryFromAirport(iataCode) === 'DE';
+}
+
+/**
+ * Get all unique countries from a list of airport codes
+ */
+export function getCountriesFromAirports(iataCodes: string[]): string[] {
+  const countries = new Set<string>();
+  for (const code of iataCodes) {
+    const country = getCountryFromAirport(code);
+    if (country !== 'XX') {
+      countries.add(country);
+    }
+  }
+  return Array.from(countries);
+}
+
+/**
+ * Get a human-readable country name from code
+ */
+export function getCountryName(countryCode: string): string {
+  const names: Record<string, string> = {
+    DE: 'Deutschland',
+    AT: 'Österreich',
+    CH: 'Schweiz',
+    GB: 'Großbritannien',
+    FR: 'Frankreich',
+    IT: 'Italien',
+    ES: 'Spanien',
+    PT: 'Portugal',
+    NL: 'Niederlande',
+    BE: 'Belgien',
+    LU: 'Luxemburg',
+    IE: 'Irland',
+    DK: 'Dänemark',
+    SE: 'Schweden',
+    NO: 'Norwegen',
+    FI: 'Finnland',
+    IS: 'Island',
+    PL: 'Polen',
+    CZ: 'Tschechien',
+    HU: 'Ungarn',
+    RO: 'Rumänien',
+    BG: 'Bulgarien',
+    GR: 'Griechenland',
+    TR: 'Türkei',
+    HR: 'Kroatien',
+    SI: 'Slowenien',
+    RS: 'Serbien',
+    ME: 'Montenegro',
+    BA: 'Bosnien und Herzegowina',
+    AL: 'Albanien',
+    MK: 'Nordmazedonien',
+    CY: 'Zypern',
+    MT: 'Malta',
+    RU: 'Russland',
+    UA: 'Ukraine',
+    AE: 'Vereinigte Arabische Emirate',
+    QA: 'Katar',
+    BH: 'Bahrain',
+    KW: 'Kuwait',
+    OM: 'Oman',
+    SA: 'Saudi-Arabien',
+    IL: 'Israel',
+    JO: 'Jordanien',
+    LB: 'Libanon',
+    EG: 'Ägypten',
+    MA: 'Marokko',
+    TN: 'Tunesien',
+    DZ: 'Algerien',
+    KE: 'Kenia',
+    ET: 'Äthiopien',
+    ZA: 'Südafrika',
+    NG: 'Nigeria',
+    CN: 'China',
+    HK: 'Hongkong',
+    TW: 'Taiwan',
+    JP: 'Japan',
+    KZ: 'Kasachstan',
+    KR: 'Südkorea',
+    SG: 'Singapur',
+    TH: 'Thailand',
+    MY: 'Malaysia',
+    ID: 'Indonesien',
+    PH: 'Philippinen',
+    VN: 'Vietnam',
+    IN: 'Indien',
+    LK: 'Sri Lanka',
+    MV: 'Malediven',
+    US: 'USA',
+    CA: 'Kanada',
+    MX: 'Mexiko',
+    CU: 'Kuba',
+    DO: 'Dominikanische Republik',
+    PA: 'Panama',
+    CR: 'Costa Rica',
+    CO: 'Kolumbien',
+    PE: 'Peru',
+    CL: 'Chile',
+    BR: 'Brasilien',
+    AR: 'Argentinien',
+    AU: 'Australien',
+    NZ: 'Neuseeland',
+  };
+  return names[countryCode.toUpperCase()] || countryCode;
+}
