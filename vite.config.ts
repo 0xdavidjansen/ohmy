@@ -40,6 +40,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
         ],
       },
       workbox: {
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {

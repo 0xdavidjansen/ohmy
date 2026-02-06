@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light;
+}
+
 /* Custom utilities for the flight tax calculator */
 @layer utilities {
   .scrollbar-thin {
