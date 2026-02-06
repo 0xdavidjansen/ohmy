@@ -30,7 +30,9 @@ export interface Flight {
   dutyCode?: string; // A, E, ME, FL, EM, RE, DP, DT, SI, TK, SB
   isContinuation: boolean; // Flight with /XX suffix
   continuationOf?: string; // Parent flight number if continuation
-  country: string; // Destination country
+  departureCountry?: string; // Departure airport country code
+  arrivalCountry?: string; // Arrival airport country code
+  country: string; // Destination country (alias for arrivalCountry for backwards compatibility)
 }
 
 // Non-flight work day (ground duty, medical, abroad day)

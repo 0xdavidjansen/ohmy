@@ -235,7 +235,9 @@ export async function parseFlugstundenPDF(file: File): Promise<{
       dutyCode,
       isContinuation,
       continuationOf,
-      country: getCountryFromAirport(arrival),
+      departureCountry: getCountryFromAirport(departure),
+      arrivalCountry: getCountryFromAirport(arrival),
+      country: getCountryFromAirport(arrival), // Backwards compatibility
     };
     
     flights.push(flight);
@@ -344,13 +346,27 @@ export async function parseFlugstundenPDF(file: File): Promise<{
     if (!alreadyExists) {
       // Try to determine the location from surrounding flights
       const flDate = dayDate.getTime();
+      
+      // FIRST: Check if next flight DEPARTS FROM abroad (return flight scenario)
       const nextFlight = flights
         .filter((f) => f.date.getTime() > flDate)
         .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
       
       let country: string | undefined;
-      if (nextFlight && nextFlight.country !== 'DE') {
-        country = nextFlight.country;
+      
+      if (nextFlight && nextFlight.departureCountry && nextFlight.departureCountry !== 'DE') {
+        // Next flight departs from abroad - we're at that location during FL day
+        country = nextFlight.departureCountry;
+      } else {
+        // FALLBACK: Check if previous flight ARRIVED AT abroad (outbound scenario)
+        const prevFlight = flights
+          .filter((f) => f.date.getTime() < flDate)
+          .sort((a, b) => b.date.getTime() - a.date.getTime())[0]; // Most recent first
+        
+        if (prevFlight && prevFlight.arrivalCountry && prevFlight.arrivalCountry !== 'DE') {
+          // Previous flight landed abroad - we're still at that location
+          country = prevFlight.arrivalCountry;
+        }
       }
       
       nonFlightDays.push({
