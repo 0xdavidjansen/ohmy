@@ -1,174 +1,328 @@
 // German tax law meal allowance rates (Verpflegungsmehraufwand)
 // Based on Bundesfinanzministerium guidelines
 
-import type { CountryAllowance } from '../types';
+import type { AllowanceYear, CountryAllowance, DomesticRates } from '../types';
+import {
+  ALLOWANCES_BY_YEAR,
+  DOMESTIC_RATES_BY_YEAR,
+  DEFAULT_ALLOWANCE_YEAR,
+  AIRPORT_TO_CITY_ALLOWANCE,
+  normalizeCountryName,
+} from './allowancesData';
+import { getCountryFromAirport } from './airports';
 
-// Domestic German rates (2024)
-export const DOMESTIC_RATES = {
-  RATE_8H: 14, // More than 8 hours away from home
-  RATE_24H: 28, // Full 24-hour day
-  ARRIVAL_DEPARTURE: 14, // Arrival/departure day of multi-day trip
-};
+// Re-export for backwards compatibility
+export { normalizeCountryName, isYearSupported, DEFAULT_ALLOWANCE_YEAR } from './allowancesData';
 
 // Distance deduction rates (Entfernungspauschale)
-export const DISTANCE_RATES = {
-  FIRST_20_KM: 0.30, // €0.30 per km for first 20km
-  ABOVE_20_KM: 0.38, // €0.38 per km for km 21+
-};
+export interface DistanceRates {
+  FIRST_20_KM: number;
+  ABOVE_20_KM: number;
+}
 
-// Country-specific foreign travel allowance rates (Auslandsreisekosten)
-// Source: BMF-Schreiben zu Reisekostenpauschalen
-export const COUNTRY_ALLOWANCES: CountryAllowance[] = [
-  // Europe
-  { country: 'Albanien', countryCode: 'AL', rate8h: 19, rate24h: 29 },
-  { country: 'Andorra', countryCode: 'AD', rate8h: 26, rate24h: 32 },
-  { country: 'Belgien', countryCode: 'BE', rate8h: 33, rate24h: 50 },
-  { country: 'Bosnien und Herzegowina', countryCode: 'BA', rate8h: 15, rate24h: 23 },
-  { country: 'Bulgarien', countryCode: 'BG', rate8h: 18, rate24h: 27 },
-  { country: 'Dänemark', countryCode: 'DK', rate8h: 42, rate24h: 63 },
-  { country: 'Estland', countryCode: 'EE', rate8h: 20, rate24h: 30 },
-  { country: 'Finnland', countryCode: 'FI', rate8h: 34, rate24h: 51 },
-  { country: 'Frankreich', countryCode: 'FR', rate8h: 39, rate24h: 58 },
-  { country: 'Griechenland', countryCode: 'GR', rate8h: 29, rate24h: 44 },
-  { country: 'Großbritannien', countryCode: 'GB', rate8h: 39, rate24h: 58 },
-  { country: 'Irland', countryCode: 'IE', rate8h: 35, rate24h: 52 },
-  { country: 'Island', countryCode: 'IS', rate8h: 40, rate24h: 60 },
-  { country: 'Italien', countryCode: 'IT', rate8h: 34, rate24h: 51 },
-  { country: 'Kroatien', countryCode: 'HR', rate8h: 23, rate24h: 35 },
-  { country: 'Lettland', countryCode: 'LV', rate8h: 19, rate24h: 29 },
-  { country: 'Liechtenstein', countryCode: 'LI', rate8h: 41, rate24h: 62 },
-  { country: 'Litauen', countryCode: 'LT', rate8h: 18, rate24h: 27 },
-  { country: 'Luxemburg', countryCode: 'LU', rate8h: 33, rate24h: 50 },
-  { country: 'Malta', countryCode: 'MT', rate8h: 28, rate24h: 42 },
-  { country: 'Moldau', countryCode: 'MD', rate8h: 18, rate24h: 27 },
-  { country: 'Monaco', countryCode: 'MC', rate8h: 39, rate24h: 58 },
-  { country: 'Montenegro', countryCode: 'ME', rate8h: 18, rate24h: 27 },
-  { country: 'Niederlande', countryCode: 'NL', rate8h: 33, rate24h: 50 },
-  { country: 'Nordmazedonien', countryCode: 'MK', rate8h: 18, rate24h: 27 },
-  { country: 'Norwegen', countryCode: 'NO', rate8h: 50, rate24h: 75 },
-  { country: 'Österreich', countryCode: 'AT', rate8h: 30, rate24h: 45 },
-  { country: 'Polen', countryCode: 'PL', rate8h: 20, rate24h: 30 },
-  { country: 'Portugal', countryCode: 'PT', rate8h: 27, rate24h: 41 },
-  { country: 'Rumänien', countryCode: 'RO', rate8h: 18, rate24h: 27 },
-  { country: 'Russland', countryCode: 'RU', rate8h: 24, rate24h: 36 },
-  { country: 'San Marino', countryCode: 'SM', rate8h: 34, rate24h: 51 },
-  { country: 'Schweden', countryCode: 'SE', rate8h: 40, rate24h: 60 },
-  { country: 'Schweiz', countryCode: 'CH', rate8h: 41, rate24h: 62 },
-  { country: 'Serbien', countryCode: 'RS', rate8h: 18, rate24h: 27 },
-  { country: 'Slowakei', countryCode: 'SK', rate8h: 19, rate24h: 29 },
-  { country: 'Slowenien', countryCode: 'SI', rate8h: 22, rate24h: 33 },
-  { country: 'Spanien', countryCode: 'ES', rate8h: 27, rate24h: 41 },
-  { country: 'Tschechien', countryCode: 'CZ', rate8h: 24, rate24h: 36 },
-  { country: 'Türkei', countryCode: 'TR', rate8h: 23, rate24h: 35 },
-  { country: 'Ukraine', countryCode: 'UA', rate8h: 18, rate24h: 27 },
-  { country: 'Ungarn', countryCode: 'HU', rate8h: 18, rate24h: 27 },
-  { country: 'Vatikanstadt', countryCode: 'VA', rate8h: 34, rate24h: 51 },
-  { country: 'Weißrussland', countryCode: 'BY', rate8h: 18, rate24h: 27 },
-  { country: 'Zypern', countryCode: 'CY', rate8h: 28, rate24h: 42 },
+export function getDistanceRates(year: number = DEFAULT_ALLOWANCE_YEAR): DistanceRates {
+  // 2004-2020: 0.30/km for all km
+  // 2021: 0.30/km first 20 km, 0.35/km from km 21
+  // 2022-2025: 0.30/km first 20 km, 0.38/km from km 21
+  // 2026+: 0.38/km for all km
+  if (year >= 2026) {
+    return { FIRST_20_KM: 0.38, ABOVE_20_KM: 0.38 };
+  }
+  if (year >= 2022) {
+    return { FIRST_20_KM: 0.30, ABOVE_20_KM: 0.38 };
+  }
+  if (year === 2021) {
+    return { FIRST_20_KM: 0.30, ABOVE_20_KM: 0.35 };
+  }
+  return { FIRST_20_KM: 0.30, ABOVE_20_KM: 0.30 };
+}
 
-  // Middle East & Africa
-  { country: 'Ägypten', countryCode: 'EG', rate8h: 27, rate24h: 41 },
-  { country: 'Algerien', countryCode: 'DZ', rate8h: 31, rate24h: 47 },
-  { country: 'Äthiopien', countryCode: 'ET', rate8h: 28, rate24h: 42 },
-  { country: 'Bahrain', countryCode: 'BH', rate8h: 32, rate24h: 48 },
-  { country: 'Israel', countryCode: 'IL', rate8h: 39, rate24h: 58 },
-  { country: 'Jordanien', countryCode: 'JO', rate8h: 28, rate24h: 42 },
-  { country: 'Katar', countryCode: 'QA', rate8h: 37, rate24h: 56 },
-  { country: 'Kenia', countryCode: 'KE', rate8h: 30, rate24h: 45 },
-  { country: 'Kuwait', countryCode: 'KW', rate8h: 32, rate24h: 48 },
-  { country: 'Libanon', countryCode: 'LB', rate8h: 30, rate24h: 45 },
-  { country: 'Libyen', countryCode: 'LY', rate8h: 32, rate24h: 48 },
-  { country: 'Marokko', countryCode: 'MA', rate8h: 28, rate24h: 42 },
-  { country: 'Nigeria', countryCode: 'NG', rate8h: 35, rate24h: 52 },
-  { country: 'Oman', countryCode: 'OM', rate8h: 32, rate24h: 48 },
-  { country: 'Saudi-Arabien', countryCode: 'SA', rate8h: 28, rate24h: 42 },
-  { country: 'Südafrika', countryCode: 'ZA', rate8h: 22, rate24h: 33 },
-  { country: 'Tunesien', countryCode: 'TN', rate8h: 26, rate24h: 39 },
-  { country: 'Vereinigte Arabische Emirate', countryCode: 'AE', rate8h: 37, rate24h: 56 },
+// Default export for backwards compatibility (uses default year)
+export const DISTANCE_RATES = getDistanceRates(DEFAULT_ALLOWANCE_YEAR);
 
-  // Asia
-  { country: 'Armenien', countryCode: 'AM', rate8h: 18, rate24h: 27 },
-  { country: 'Aserbaidschan', countryCode: 'AZ', rate8h: 18, rate24h: 27 },
-  { country: 'Bangladesch', countryCode: 'BD', rate8h: 24, rate24h: 36 },
-  { country: 'China', countryCode: 'CN', rate8h: 33, rate24h: 50 },
-  { country: 'Georgien', countryCode: 'GE', rate8h: 18, rate24h: 27 },
-  { country: 'Hongkong', countryCode: 'HK', rate8h: 44, rate24h: 66 },
-  { country: 'Indien', countryCode: 'IN', rate8h: 27, rate24h: 41 },
-  { country: 'Indonesien', countryCode: 'ID', rate8h: 27, rate24h: 41 },
-  { country: 'Japan', countryCode: 'JP', rate8h: 40, rate24h: 60 },
-  { country: 'Kasachstan', countryCode: 'KZ', rate8h: 22, rate24h: 33 },
-  { country: 'Malaysia', countryCode: 'MY', rate8h: 24, rate24h: 36 },
-  { country: 'Malediven', countryCode: 'MV', rate8h: 39, rate24h: 58 },
-  { country: 'Pakistan', countryCode: 'PK', rate8h: 21, rate24h: 32 },
-  { country: 'Philippinen', countryCode: 'PH', rate8h: 24, rate24h: 36 },
-  { country: 'Singapur', countryCode: 'SG', rate8h: 39, rate24h: 58 },
-  { country: 'Sri Lanka', countryCode: 'LK', rate8h: 24, rate24h: 36 },
-  { country: 'Südkorea', countryCode: 'KR', rate8h: 36, rate24h: 54 },
-  { country: 'Taiwan', countryCode: 'TW', rate8h: 28, rate24h: 42 },
-  { country: 'Thailand', countryCode: 'TH', rate8h: 26, rate24h: 39 },
-  { country: 'Vietnam', countryCode: 'VN', rate8h: 24, rate24h: 36 },
-
-  // Americas
-  { country: 'Argentinien', countryCode: 'AR', rate8h: 24, rate24h: 36 },
-  { country: 'Brasilien', countryCode: 'BR', rate8h: 31, rate24h: 47 },
-  { country: 'Chile', countryCode: 'CL', rate8h: 28, rate24h: 42 },
-  { country: 'Costa Rica', countryCode: 'CR', rate8h: 28, rate24h: 42 },
-  { country: 'Dominikanische Republik', countryCode: 'DO', rate8h: 28, rate24h: 42 },
-  { country: 'Ecuador', countryCode: 'EC', rate8h: 26, rate24h: 39 },
-  { country: 'Jamaika', countryCode: 'JM', rate8h: 36, rate24h: 54 },
-  { country: 'Kanada', countryCode: 'CA', rate8h: 36, rate24h: 54 },
-  { country: 'Kolumbien', countryCode: 'CO', rate8h: 28, rate24h: 42 },
-  { country: 'Kuba', countryCode: 'CU', rate8h: 33, rate24h: 50 },
-  { country: 'Mexiko', countryCode: 'MX', rate8h: 33, rate24h: 50 },
-  { country: 'Panama', countryCode: 'PA', rate8h: 26, rate24h: 39 },
-  { country: 'Peru', countryCode: 'PE', rate8h: 24, rate24h: 36 },
-  { country: 'USA', countryCode: 'US', rate8h: 39, rate24h: 58 },
-  { country: 'Venezuela', countryCode: 'VE', rate8h: 33, rate24h: 50 },
-
-  // Oceania
-  { country: 'Australien', countryCode: 'AU', rate8h: 37, rate24h: 56 },
-  { country: 'Neuseeland', countryCode: 'NZ', rate8h: 33, rate24h: 50 },
-];
-
-// Default rate for countries not in the list
+// Default rate for countries not in the list (Luxemburg rates per BMF)
 export const DEFAULT_FOREIGN_RATE = {
-  rate8h: 24,
-  rate24h: 36,
-};
+  rate8h: 42,
+  rate24h: 63,
+} as const;
+
+// Get domestic rates for a specific year
+export function getDomesticRates(year: AllowanceYear = DEFAULT_ALLOWANCE_YEAR): DomesticRates {
+  return DOMESTIC_RATES_BY_YEAR[year] || DOMESTIC_RATES_BY_YEAR[DEFAULT_ALLOWANCE_YEAR];
+}
+
+// Legacy exports for backwards compatibility (uses default year)
+export const DOMESTIC_RATES = DOMESTIC_RATES_BY_YEAR[DEFAULT_ALLOWANCE_YEAR];
+
+// Build CountryAllowance array for a specific year
+export function getCountryAllowancesByYear(year: AllowanceYear = DEFAULT_ALLOWANCE_YEAR): CountryAllowance[] {
+  const allowanceTable = ALLOWANCES_BY_YEAR[year] || ALLOWANCES_BY_YEAR[DEFAULT_ALLOWANCE_YEAR];
+  
+  const allowances: CountryAllowance[] = [];
+  for (const [country, rates] of Object.entries(allowanceTable)) {
+    const rateTuple = rates as [number, number];
+    allowances.push({
+      country,
+      countryCode: getCountryCodeFromName(country),
+      rate8h: rateTuple[1], // partialDay
+      rate24h: rateTuple[0], // fullDay
+    });
+  }
+  return allowances;
+}
+
+// Legacy export for backwards compatibility
+export const COUNTRY_ALLOWANCES = getCountryAllowancesByYear(DEFAULT_ALLOWANCE_YEAR);
+
+// Helper to get ISO country code from German country name
+function getCountryCodeFromName(countryName: string): string {
+  // Map of German country names to ISO codes
+  const countryCodeMap: Record<string, string> = {
+    'Deutschland': 'DE',
+    'Afghanistan': 'AF',
+    'Aegypten': 'EG',
+    'Aethiopien': 'ET',
+    'Aequatorialguinea': 'GQ',
+    'Albanien': 'AL',
+    'Algerien': 'DZ',
+    'Andorra': 'AD',
+    'Angola': 'AO',
+    'Argentinien': 'AR',
+    'Armenien': 'AM',
+    'Aserbaidschan': 'AZ',
+    'Australien': 'AU',
+    'Bahrain': 'BH',
+    'Bangladesch': 'BD',
+    'Barbados': 'BB',
+    'Belgien': 'BE',
+    'Benin': 'BJ',
+    'Bhutan': 'BT',
+    'Bolivien': 'BO',
+    'Bosnien und Herzegowina': 'BA',
+    'Botsuana': 'BW',
+    'Brasilien': 'BR',
+    'Brunei': 'BN',
+    'Bulgarien': 'BG',
+    'Burkina Faso': 'BF',
+    'Burundi': 'BI',
+    'Chile': 'CL',
+    'China': 'CN',
+    'Hongkong': 'HK',
+    'Costa Rica': 'CR',
+    'Elfenbeinkueste': 'CI',
+    'Daenemark': 'DK',
+    'Dominikanische Republik': 'DO',
+    'Dschibuti': 'DJ',
+    'Ecuador': 'EC',
+    'El Salvador': 'SV',
+    'Eritrea': 'ER',
+    'Estland': 'EE',
+    'Fidschi': 'FJ',
+    'Finnland': 'FI',
+    'Frankreich': 'FR',
+    'Gabun': 'GA',
+    'Gambia': 'GM',
+    'Georgien': 'GE',
+    'Ghana': 'GH',
+    'Griechenland': 'GR',
+    'Grossbritannien': 'GB',
+    'Guatemala': 'GT',
+    'Guinea': 'GN',
+    'Guinea-Bissau': 'GW',
+    'Haiti': 'HT',
+    'Honduras': 'HN',
+    'Indien': 'IN',
+    'Indonesien': 'ID',
+    'Iran': 'IR',
+    'Irland': 'IE',
+    'Island': 'IS',
+    'Israel': 'IL',
+    'Italien': 'IT',
+    'Jamaika': 'JM',
+    'Japan': 'JP',
+    'Jemen': 'YE',
+    'Jordanien': 'JO',
+    'Kambodscha': 'KH',
+    'Kamerun': 'CM',
+    'Kanada': 'CA',
+    'Kap Verde': 'CV',
+    'Kasachstan': 'KZ',
+    'Katar': 'QA',
+    'Kenia': 'KE',
+    'Kirgisistan': 'KG',
+    'Kolumbien': 'CO',
+    'Kongo': 'CG',
+    'Kongo, Demokratische Republik': 'CD',
+    'Korea, Demokratische Volksrepublik': 'KP',
+    'Korea, Republik': 'KR',
+    'Kosovo': 'XK',
+    'Kroatien': 'HR',
+    'Kuba': 'CU',
+    'Kuwait': 'KW',
+    'Laos': 'LA',
+    'Lesotho': 'LS',
+    'Lettland': 'LV',
+    'Libanon': 'LB',
+    'Libyen': 'LY',
+    'Liberia': 'LR',
+    'Liechtenstein': 'LI',
+    'Litauen': 'LT',
+    'Luxemburg': 'LU',
+    'Madagaskar': 'MG',
+    'Malawi': 'MW',
+    'Malaysia': 'MY',
+    'Malediven': 'MV',
+    'Mali': 'ML',
+    'Malta': 'MT',
+    'Marokko': 'MA',
+    'Marshall Inseln': 'MH',
+    'Mauretanien': 'MR',
+    'Mauritius': 'MU',
+    'Mexiko': 'MX',
+    'Moldau': 'MD',
+    'Monaco': 'MC',
+    'Mongolei': 'MN',
+    'Montenegro': 'ME',
+    'Mosambik': 'MZ',
+    'Myanmar': 'MM',
+    'Namibia': 'NA',
+    'Nepal': 'NP',
+    'Neuseeland': 'NZ',
+    'Nicaragua': 'NI',
+    'Niederlande': 'NL',
+    'Niger': 'NE',
+    'Nigeria': 'NG',
+    'Nordmazedonien': 'MK',
+    'Norwegen': 'NO',
+    'Oesterreich': 'AT',
+    'Oman': 'OM',
+    'Pakistan': 'PK',
+    'Palau': 'PW',
+    'Panama': 'PA',
+    'Papua-Neuguinea': 'PG',
+    'Paraguay': 'PY',
+    'Peru': 'PE',
+    'Philippinen': 'PH',
+    'Polen': 'PL',
+    'Portugal': 'PT',
+    'Ruanda': 'RW',
+    'Rumaenien': 'RO',
+    'Russland': 'RU',
+    'Sambia': 'ZM',
+    'Samoa': 'WS',
+    'San Marino': 'SM',
+    'Sao Tome und Principe': 'ST',
+    'Saudi-Arabien': 'SA',
+    'Schweden': 'SE',
+    'Schweiz': 'CH',
+    'Senegal': 'SN',
+    'Serbien': 'RS',
+    'Seychellen': 'SC',
+    'Sierra Leone': 'SL',
+    'Simbabwe': 'ZW',
+    'Singapur': 'SG',
+    'Slowakei': 'SK',
+    'Slowenien': 'SI',
+    'Spanien': 'ES',
+    'Sri Lanka': 'LK',
+    'Sudan': 'SD',
+    'Suedafrika': 'ZA',
+    'Suedsudan': 'SS',
+    'Syrien': 'SY',
+    'Tadschikistan': 'TJ',
+    'Taiwan': 'TW',
+    'Tansania': 'TZ',
+    'Thailand': 'TH',
+    'Togo': 'TG',
+    'Tonga': 'TO',
+    'Trinidad und Tobago': 'TT',
+    'Tschad': 'TD',
+    'Tschechien': 'CZ',
+    'Tunesien': 'TN',
+    'Tuerkei': 'TR',
+    'Turkmenistan': 'TM',
+    'Uganda': 'UG',
+    'Ukraine': 'UA',
+    'Ungarn': 'HU',
+    'Uruguay': 'UY',
+    'USA': 'US',
+    'Usbekistan': 'UZ',
+    'Vatikanstadt': 'VA',
+    'Venezuela': 'VE',
+    'Vereinigte Arabische Emirate': 'AE',
+    'Vietnam': 'VN',
+    'Weissrussland': 'BY',
+    'Zentralafrikanische Republik': 'CF',
+    'Zypern': 'CY',
+  };
+  
+  // Handle city-specific entries (e.g., "USA - New York")
+  const baseCountry = countryName.split(' - ')[0];
+  return countryCodeMap[baseCountry] || 'XX';
+}
 
 /**
- * Get allowance rate for a specific country
+ * Get allowance rate for a specific country by ISO code and year
  */
-export function getCountryAllowance(countryCode: string): CountryAllowance {
-  const found = COUNTRY_ALLOWANCES.find(
-    (c) => c.countryCode.toUpperCase() === countryCode.toUpperCase()
-  );
+export function getCountryAllowance(countryCode: string, year: AllowanceYear = DEFAULT_ALLOWANCE_YEAR): CountryAllowance {
+  const normalizedCode = countryCode.toUpperCase();
+  const allowanceTable = ALLOWANCES_BY_YEAR[year] || ALLOWANCES_BY_YEAR[DEFAULT_ALLOWANCE_YEAR];
   
-  if (found) {
-    return found;
+  // Find country by ISO code
+  for (const [country, rates] of Object.entries(allowanceTable)) {
+    if (getCountryCodeFromName(country) === normalizedCode) {
+      const rateTuple = rates as [number, number];
+      return {
+        country,
+        countryCode: normalizedCode,
+        rate8h: rateTuple[1],
+        rate24h: rateTuple[0],
+      };
+    }
   }
   
   // Return default rates with the country code
   return {
     country: countryCode,
-    countryCode: countryCode.toUpperCase(),
+    countryCode: normalizedCode,
     rate8h: DEFAULT_FOREIGN_RATE.rate8h,
     rate24h: DEFAULT_FOREIGN_RATE.rate24h,
   };
 }
 
 /**
- * Get allowance rate by country name (German)
+ * Get allowance rate by country name (German) and year
  */
-export function getCountryAllowanceByName(countryName: string): CountryAllowance {
-  const found = COUNTRY_ALLOWANCES.find(
-    (c) => c.country.toLowerCase() === countryName.toLowerCase()
-  );
+export function getCountryAllowanceByName(countryName: string, year: AllowanceYear = DEFAULT_ALLOWANCE_YEAR): CountryAllowance {
+  const normalizedName = normalizeCountryName(countryName);
+  const allowanceTable = ALLOWANCES_BY_YEAR[year] || ALLOWANCES_BY_YEAR[DEFAULT_ALLOWANCE_YEAR];
   
-  if (found) {
-    return found;
+  // Try exact match first
+  const exactMatch = allowanceTable[normalizedName];
+  if (exactMatch) {
+    const rateTuple = exactMatch as [number, number];
+    return {
+      country: normalizedName,
+      countryCode: getCountryCodeFromName(normalizedName),
+      rate8h: rateTuple[1],
+      rate24h: rateTuple[0],
+    };
   }
   
+  // Try case-insensitive match
+  for (const [country, rates] of Object.entries(allowanceTable)) {
+    if (country.toLowerCase() === normalizedName.toLowerCase()) {
+      const rateTuple = rates as [number, number];
+      return {
+        country,
+        countryCode: getCountryCodeFromName(country),
+        rate8h: rateTuple[1],
+        rate24h: rateTuple[0],
+      };
+    }
+  }
+  
+  // Return default rates
   return {
     country: countryName,
     countryCode: 'XX',
@@ -178,8 +332,43 @@ export function getCountryAllowanceByName(countryName: string): CountryAllowance
 }
 
 /**
+ * Get allowance rates for an airport by IATA code and year
+ * This handles city-specific rates (e.g., JFK -> "USA - New York")
+ */
+export function getAllowanceByAirport(iataCode: string, year: AllowanceYear = DEFAULT_ALLOWANCE_YEAR): CountryAllowance {
+  const code = iataCode?.toUpperCase() || '';
+  const allowanceTable = ALLOWANCES_BY_YEAR[year] || ALLOWANCES_BY_YEAR[DEFAULT_ALLOWANCE_YEAR];
+  
+  // Check if there's a city-specific mapping for this airport
+  const citySpecificKey = AIRPORT_TO_CITY_ALLOWANCE[code];
+  if (citySpecificKey) {
+    const rates = allowanceTable[citySpecificKey];
+    if (rates) {
+      const rateTuple = rates as [number, number];
+      return {
+        country: citySpecificKey,
+        countryCode: getCountryCodeFromName(citySpecificKey),
+        rate8h: rateTuple[1],
+        rate24h: rateTuple[0],
+      };
+    }
+  }
+  
+  // Fall back to country-based lookup using airports.ts
+  const countryCode = getCountryFromAirport(code);
+  return getCountryAllowance(countryCode, year);
+}
+
+/**
  * Check if a country code represents Germany (domestic)
  */
 export function isDomestic(countryCode: string): boolean {
   return countryCode.toUpperCase() === 'DE';
+}
+
+/**
+ * Get the list of supported years
+ */
+export function getSupportedYears(): AllowanceYear[] {
+  return [2025, 2024, 2023];
 }

@@ -136,9 +136,9 @@ export function ExportTab() {
     
     lines.push('Fahrtkosten / Entfernungspauschale:');
     lines.push(`  ${taxCalculation.travelCosts.trips} Fahrten × ${settings.distanceToWork} km = ${taxCalculation.travelCosts.totalKm} km`);
-    lines.push(`  Erste 20 km × €0,30 = ${formatCurrency(taxCalculation.travelCosts.deductionFirst20km)}`);
+    lines.push(`  Erste 20 km × ${formatCurrency(taxCalculation.travelCosts.rateFirst20km)} = ${formatCurrency(taxCalculation.travelCosts.deductionFirst20km)}`);
     if (taxCalculation.travelCosts.deductionAbove20km > 0) {
-      lines.push(`  Ab km 21 × €0,38 = ${formatCurrency(taxCalculation.travelCosts.deductionAbove20km)}`);
+      lines.push(`  Ab km 21 × ${formatCurrency(taxCalculation.travelCosts.rateAbove20km)} = ${formatCurrency(taxCalculation.travelCosts.deductionAbove20km)}`);
     }
     lines.push(`  Summe: ${formatCurrency(taxCalculation.travelCosts.total)}`);
     lines.push('');

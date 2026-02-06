@@ -157,8 +157,8 @@ function AppContextInner({ children }: { children: React.ReactNode }) {
   const deferredReimbursementData = useDeferredValue(flightState.reimbursementData);
 
   const monthlyBreakdown = useMemo(
-    () => calculateMonthlyBreakdown(deferredFlights, deferredNonFlightDays, deferredSettings),
-    [deferredFlights, deferredNonFlightDays, deferredSettings]
+    () => calculateMonthlyBreakdown(deferredFlights, deferredNonFlightDays, deferredSettings, deferredReimbursementData),
+    [deferredFlights, deferredNonFlightDays, deferredSettings, deferredReimbursementData]
   );
 
   const taxCalculation = useMemo(

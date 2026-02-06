@@ -63,6 +63,9 @@ export function SummaryTab() {
                   Verpflegung
                 </th>
                 <th className="text-right py-3 px-4 font-medium text-slate-600 dark:text-slate-300">
+                  AG-Erstattung
+                </th>
+                <th className="text-right py-3 px-4 font-medium text-slate-600 dark:text-slate-300">
                   Trinkgeld
                 </th>
                 <th className="text-right py-3 px-4 font-medium text-slate-600 dark:text-slate-300">
@@ -95,6 +98,9 @@ export function SummaryTab() {
                     {formatCurrency(month.mealAllowance)}
                   </td>
                   <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-300">
+                    {formatCurrency(month.employerReimbursement)}
+                  </td>
+                  <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-300">
                     {formatCurrency(month.tips)}
                   </td>
                   <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-300">
@@ -121,6 +127,9 @@ export function SummaryTab() {
                 </td>
                 <td className="py-3 px-4 text-right text-slate-800 dark:text-white">
                   {formatCurrency(taxCalculation.mealAllowances.totalAllowances)}
+                </td>
+                <td className="py-3 px-4 text-right text-slate-800 dark:text-white">
+                  {formatCurrency(taxCalculation.mealAllowances.employerReimbursement)}
                 </td>
                 <td className="py-3 px-4 text-right text-slate-800 dark:text-white">
                   {formatCurrency(taxCalculation.travelExpenses.total)}
@@ -213,7 +222,7 @@ export function SummaryTab() {
               </div>
               <div className="flex justify-between">
                 <span className="text-blue-600 dark:text-blue-400">
-                  Erste 20 km × €0,30
+                  Erste 20 km × {formatCurrency(taxCalculation.travelCosts.rateFirst20km)}
                 </span>
                 <span className="text-blue-800 dark:text-blue-200">
                   {formatCurrency(taxCalculation.travelCosts.deductionFirst20km)}
@@ -222,7 +231,7 @@ export function SummaryTab() {
               {taxCalculation.travelCosts.deductionAbove20km > 0 && (
                 <div className="flex justify-between">
                   <span className="text-blue-600 dark:text-blue-400">
-                    Ab km 21 × €0,38
+                    Ab km 21 × {formatCurrency(taxCalculation.travelCosts.rateAbove20km)}
                   </span>
                   <span className="text-blue-800 dark:text-blue-200">
                     {formatCurrency(taxCalculation.travelCosts.deductionAbove20km)}

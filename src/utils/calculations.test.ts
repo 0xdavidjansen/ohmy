@@ -46,32 +46,51 @@ describe('parseBlockTimeToHours', () => {
 })
 
 describe('calculateDistanceDeduction', () => {
-  it('calculates correctly for distance under 20km', () => {
-    const result = calculateDistanceDeduction(10, 15) // 10 trips, 15km
+  it('calculates correctly for distance under 20km (2024 rates)', () => {
+    const result = calculateDistanceDeduction(10, 15, 2024) // 10 trips, 15km
     expect(result.totalKm).toBe(150)
     expect(result.deductionFirst20km).toBe(45) // 10 * 15 * 0.30
     expect(result.deductionAbove20km).toBe(0)
     expect(result.total).toBe(45)
+    expect(result.rateFirst20km).toBe(0.30)
+    expect(result.rateAbove20km).toBe(0.38)
   })
 
-  it('calculates correctly for distance over 20km', () => {
-    const result = calculateDistanceDeduction(10, 30) // 10 trips, 30km
+  it('calculates correctly for distance over 20km (2024 rates)', () => {
+    const result = calculateDistanceDeduction(10, 30, 2024) // 10 trips, 30km
     expect(result.totalKm).toBe(300)
     expect(result.deductionFirst20km).toBe(60) // 10 * 20 * 0.30
     expect(result.deductionAbove20km).toBe(38) // 10 * 10 * 0.38
     expect(result.total).toBe(98)
+    expect(result.rateFirst20km).toBe(0.30)
+    expect(result.rateAbove20km).toBe(0.38)
   })
 
-  it('handles exactly 20km', () => {
-    const result = calculateDistanceDeduction(5, 20)
+  it('handles exactly 20km (2024 rates)', () => {
+    const result = calculateDistanceDeduction(5, 20, 2024)
     expect(result.deductionFirst20km).toBe(30) // 5 * 20 * 0.30
     expect(result.deductionAbove20km).toBe(0)
     expect(result.total).toBe(30)
   })
 
   it('handles zero trips', () => {
-    const result = calculateDistanceDeduction(0, 30)
+    const result = calculateDistanceDeduction(0, 30, 2024)
     expect(result.total).toBe(0)
+  })
+
+  it('uses 2021 rate for km 21+', () => {
+    const result = calculateDistanceDeduction(1, 30, 2021)
+    expect(result.deductionFirst20km).toBe(6) // 20 * 0.30
+    expect(result.deductionAbove20km).toBe(3.5) // 10 * 0.35
+    expect(result.rateAbove20km).toBe(0.35)
+  })
+
+  it('uses 2026 rate for all km', () => {
+    const result = calculateDistanceDeduction(1, 30, 2026)
+    expect(result.deductionFirst20km).toBe(7.6) // 20 * 0.38
+    expect(result.deductionAbove20km).toBe(3.8) // 10 * 0.38
+    expect(result.rateFirst20km).toBe(0.38)
+    expect(result.rateAbove20km).toBe(0.38)
   })
 })
 

@@ -101,7 +101,7 @@ export function SettingsTab() {
               <span className="text-slate-500 dark:text-slate-400">km</span>
             </div>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              €0,30/km für die ersten 20 km, €0,38/km ab km 21
+              2021: €0,30/km bis 20 km, €0,35/km ab km 21 · 2022–2025: €0,30/km bis 20 km, €0,38/km ab km 21
             </p>
           </div>
 
@@ -213,9 +213,6 @@ export function SettingsTab() {
             />
             <span className="text-slate-500 dark:text-slate-400">€ / Tag</span>
           </div>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Übliche Pauschale: €1,00 - €2,00 pro Arbeitstag
-          </p>
         </div>
       </section>
 
@@ -250,9 +247,6 @@ export function SettingsTab() {
             />
             <span className="text-slate-500 dark:text-slate-400">€ / Nacht</span>
           </div>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Übliche Pauschale: €1,00 - €2,00 pro Übernachtung
-          </p>
         </div>
       </section>
 

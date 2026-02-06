@@ -9,9 +9,17 @@ import type {
   HotelNight,
   TripSegment,
   ReimbursementData,
+  AllowanceYear,
 } from '../types';
 import { MONTH_NAMES, GROUND_DUTY_CODES } from '../types';
-import { DOMESTIC_RATES, DISTANCE_RATES, getCountryAllowance, isDomestic } from './allowances';
+import { 
+  DISTANCE_RATES, 
+  getDistanceRates,
+  getCountryAllowance, 
+  getDomesticRates,
+  isDomestic,
+  DEFAULT_ALLOWANCE_YEAR,
+} from './allowances';
 import { getCountryFromAirport, getCountryName } from './airports';
 
 /**
@@ -58,18 +66,29 @@ export function parseBlockTimeToHours(blockTime: string): number {
 
 /**
  * Calculate distance deduction (Entfernungspauschale)
- * German tax law: €0.30/km for first 20km, €0.38/km for km 21+
+ * Rates depend on the year:
+ * - 2004-2020: €0.30/km for all km
+ * - 2021: €0.30/km first 20 km, €0.35/km from km 21
+ * - 2022-2025: €0.30/km first 20 km, €0.38/km from km 21
+ * - 2026+: €0.38/km for all km
  */
-export function calculateDistanceDeduction(trips: number, distanceKm: number): {
+export function calculateDistanceDeduction(
+  trips: number,
+  distanceKm: number,
+  year: number = DEFAULT_ALLOWANCE_YEAR
+): {
   totalKm: number;
   deductionFirst20km: number;
   deductionAbove20km: number;
   total: number;
+  rateFirst20km: number;
+  rateAbove20km: number;
 } {
   const totalKm = trips * distanceKm;
+  const rates = getDistanceRates(year);
   
   // For each trip, calculate the deduction
-  const perTripDeduction = calculateSingleTripDeduction(distanceKm);
+  const perTripDeduction = calculateSingleTripDeduction(distanceKm, rates);
   const total = trips * perTripDeduction;
   
   // Break down for display
@@ -78,19 +97,21 @@ export function calculateDistanceDeduction(trips: number, distanceKm: number): {
   
   return {
     totalKm,
-    deductionFirst20km: trips * first20Km * DISTANCE_RATES.FIRST_20_KM,
-    deductionAbove20km: trips * above20Km * DISTANCE_RATES.ABOVE_20_KM,
+    deductionFirst20km: trips * first20Km * rates.FIRST_20_KM,
+    deductionAbove20km: trips * above20Km * rates.ABOVE_20_KM,
     total,
+    rateFirst20km: rates.FIRST_20_KM,
+    rateAbove20km: rates.ABOVE_20_KM,
   };
 }
 
-function calculateSingleTripDeduction(distanceKm: number): number {
+function calculateSingleTripDeduction(distanceKm: number, rates = DISTANCE_RATES): number {
   const first20Km = Math.min(distanceKm, 20);
   const above20Km = Math.max(0, distanceKm - 20);
   
   return (
-    first20Km * DISTANCE_RATES.FIRST_20_KM +
-    above20Km * DISTANCE_RATES.ABOVE_20_KM
+    first20Km * rates.FIRST_20_KM +
+    above20Km * rates.ABOVE_20_KM
   );
 }
 
@@ -304,7 +325,8 @@ export function detectTrips(flights: Flight[]): TripSegment[] {
  */
 export function calculateMealAllowances(
   flights: Flight[],
-  nonFlightDays: NonFlightDay[]
+  nonFlightDays: NonFlightDay[],
+  year: AllowanceYear = DEFAULT_ALLOWANCE_YEAR
 ): {
   domestic8h: { days: number; rate: number; total: number };
   domestic24h: { days: number; rate: number; total: number };
@@ -312,6 +334,7 @@ export function calculateMealAllowances(
   total: number;
 } {
   const trips = detectTrips(flights);
+  const domesticRates = getDomesticRates(year);
   
   let domestic8hDays = 0;
   let domestic24hDays = 0;
@@ -332,7 +355,7 @@ export function calculateMealAllowances(
         domestic8hDays++;
       } else {
         if (!foreignDays[primaryCountry]) {
-          const allowance = getCountryAllowance(primaryCountry);
+          const allowance = getCountryAllowance(primaryCountry, year);
           foreignDays[primaryCountry] = {
             days8h: 0,
             days24h: 0,
@@ -351,7 +374,7 @@ export function calculateMealAllowances(
         domestic24hDays += Math.max(0, tripDays - 2);
       } else {
         if (!foreignDays[primaryCountry]) {
-          const allowance = getCountryAllowance(primaryCountry);
+          const allowance = getCountryAllowance(primaryCountry, year);
           foreignDays[primaryCountry] = {
             days8h: 0,
             days24h: 0,
@@ -371,7 +394,7 @@ export function calculateMealAllowances(
       const countryCode = day.country;
       if (!isDomestic(countryCode)) {
         if (!foreignDays[countryCode]) {
-          const allowance = getCountryAllowance(countryCode);
+          const allowance = getCountryAllowance(countryCode, year);
           foreignDays[countryCode] = {
             days8h: 0,
             days24h: 0,
@@ -387,8 +410,8 @@ export function calculateMealAllowances(
   }
   
   // Calculate totals
-  const domestic8hTotal = domestic8hDays * DOMESTIC_RATES.RATE_8H;
-  const domestic24hTotal = domestic24hDays * DOMESTIC_RATES.RATE_24H;
+  const domestic8hTotal = domestic8hDays * domesticRates.RATE_8H;
+  const domestic24hTotal = domestic24hDays * domesticRates.RATE_24H;
   
   const foreignResult = Object.entries(foreignDays).map(([country, data]) => ({
     country: getCountryName(country),
@@ -400,8 +423,8 @@ export function calculateMealAllowances(
   const foreignTotal = foreignResult.reduce((sum, f) => sum + f.total, 0);
   
   return {
-    domestic8h: { days: domestic8hDays, rate: DOMESTIC_RATES.RATE_8H, total: domestic8hTotal },
-    domestic24h: { days: domestic24hDays, rate: DOMESTIC_RATES.RATE_24H, total: domestic24hTotal },
+    domestic8h: { days: domestic8hDays, rate: domesticRates.RATE_8H, total: domestic8hTotal },
+    domestic24h: { days: domestic24hDays, rate: domesticRates.RATE_24H, total: domestic24hTotal },
     foreign: foreignResult,
     total: domestic8hTotal + domestic24hTotal + foreignTotal,
   };
@@ -413,7 +436,8 @@ export function calculateMealAllowances(
 export function calculateMonthlyBreakdown(
   flights: Flight[],
   nonFlightDays: NonFlightDay[],
-  settings: Settings
+  settings: Settings,
+  reimbursementData: ReimbursementData[] = []
 ): MonthlyBreakdown[] {
   // Group by month/year
   const monthlyData: Record<string, {
@@ -458,13 +482,18 @@ export function calculateMonthlyBreakdown(
     const trips = countTrips(data.flights, data.nonFlightDays, settings);
     
     // Distance deduction
-    const distanceResult = calculateDistanceDeduction(trips, settings.distanceToWork);
+    const distanceResult = calculateDistanceDeduction(trips, settings.distanceToWork, year);
     
     // Hotel nights
     const hotelNights = detectHotelNights(data.flights);
     
     // Meal allowance (simplified - full calculation needs trip detection)
-    const mealResult = calculateMealAllowances(data.flights, data.nonFlightDays);
+    const mealResult = calculateMealAllowances(data.flights, data.nonFlightDays, year);
+    
+    // Employer reimbursement for this month
+    const monthlyReimbursement = reimbursementData
+      .filter(r => r.month === month && r.year === year)
+      .reduce((sum, r) => sum + r.taxFreeReimbursement, 0);
     
     breakdown.push({
       month,
@@ -475,6 +504,7 @@ export function calculateMonthlyBreakdown(
       trips,
       distanceDeduction: Math.round(distanceResult.total * 100) / 100,
       mealAllowance: Math.round(mealResult.total * 100) / 100,
+      employerReimbursement: Math.round(monthlyReimbursement * 100) / 100,
       tips: Math.round(hotelNights.length * settings.tipPerNight * 100) / 100,
       cleaningCosts: Math.round(workDays * settings.cleaningCostPerDay * 100) / 100,
       hotelNights: hotelNights.length,
@@ -509,10 +539,11 @@ export function calculateTaxDeduction(
   
   // Trips for distance deduction
   const trips = countTrips(flights, nonFlightDays, settings);
-  const distanceResult = calculateDistanceDeduction(trips, settings.distanceToWork);
   
-  // Meal allowances
-  const mealResult = calculateMealAllowances(flights, nonFlightDays);
+  // Meal allowances - use year from first flight or default
+  const year = flights.length > 0 ? flights[0].year : DEFAULT_ALLOWANCE_YEAR;
+  const distanceResult = calculateDistanceDeduction(trips, settings.distanceToWork, year);
+  const mealResult = calculateMealAllowances(flights, nonFlightDays, year);
   
   // Employer reimbursement from Streckeneinsatzabrechnung
   const employerReimbursement = reimbursementData.reduce(
@@ -542,6 +573,8 @@ export function calculateTaxDeduction(
       deductionFirst20km: Math.round(distanceResult.deductionFirst20km * 100) / 100,
       deductionAbove20km: Math.round(distanceResult.deductionAbove20km * 100) / 100,
       total: Math.round(distanceResult.total * 100) / 100,
+      rateFirst20km: distanceResult.rateFirst20km,
+      rateAbove20km: distanceResult.rateAbove20km,
     },
     mealAllowances: {
       domestic8h: mealResult.domestic8h,

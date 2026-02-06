@@ -75,6 +75,7 @@ export interface MonthlyBreakdown {
   trips: number; // Commute trips
   distanceDeduction: number; // Entfernungspauschale EUR
   mealAllowance: number; // Verpflegungsmehraufwand EUR
+  employerReimbursement: number; // Arbeitgeber-Erstattung (steuerfrei) EUR
   tips: number; // Trinkgeld EUR
   cleaningCosts: number; // Reinigungskosten EUR
   hotelNights: number; // Number of hotel nights
@@ -128,6 +129,8 @@ export interface TaxCalculation {
     deductionFirst20km: number;
     deductionAbove20km: number;
     total: number;
+    rateFirst20km: number;
+    rateAbove20km: number;
   };
   // Verpflegungsmehraufwendungen
   mealAllowances: {
@@ -185,12 +188,28 @@ export interface AppState {
 
 export type TabType = 'upload' | 'flights' | 'summary' | 'settings' | 'info' | 'export';
 
+// Supported years for allowance calculations
+export type AllowanceYear = 2023 | 2024 | 2025;
+
 // Country allowance rates (for foreign travel)
 export interface CountryAllowance {
   country: string;
   countryCode: string;
-  rate8h: number; // Partial day rate
-  rate24h: number; // Full day rate
+  rate8h: number; // Partial day rate (>8h)
+  rate24h: number; // Full day rate (24h)
+}
+
+// Domestic German allowance rates by year
+export interface DomesticRates {
+  RATE_8H: number; // More than 8 hours away from home
+  RATE_24H: number; // Full 24-hour day
+  ARRIVAL_DEPARTURE: number; // Arrival/departure day of multi-day trip
+}
+
+// Year-indexed allowance data structure
+export interface YearlyAllowanceData {
+  domestic: DomesticRates;
+  countries: Record<string, [number, number]>; // [fullDay, partialDay]
 }
 
 // Re-export constants for backward compatibility

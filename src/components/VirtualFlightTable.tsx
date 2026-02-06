@@ -4,7 +4,7 @@ import type { Flight, NonFlightDay } from '../types';
 import { DUTY_CODES } from '../constants';
 import { getCountryName } from '../utils/airports';
 import { formatCurrency } from '../utils/calculations';
-import { getCountryAllowance, DOMESTIC_RATES } from '../utils/allowances';
+import { getCountryAllowance, getDomesticRates, DEFAULT_ALLOWANCE_YEAR } from '../utils/allowances';
 
 interface VirtualFlightTableProps {
   flights: Flight[];
@@ -145,10 +145,12 @@ function FlightRow({ flight }: { flight: Flight }) {
 
 function FlightRowContent({ flight }: { flight: Flight }) {
   const countryCode = flight.country;
+  const year = flight.year || DEFAULT_ALLOWANCE_YEAR;
+  const domesticRates = getDomesticRates(year);
   const allowance =
     countryCode === 'DE'
-      ? { rate8h: DOMESTIC_RATES.RATE_8H, rate24h: DOMESTIC_RATES.RATE_24H }
-      : getCountryAllowance(countryCode);
+      ? { rate8h: domesticRates.RATE_8H, rate24h: domesticRates.RATE_24H }
+      : getCountryAllowance(countryCode, year);
 
   return (
     <>
@@ -222,6 +224,9 @@ function NonFlightDayRow({ day }: { day: NonFlightDay }) {
 }
 
 function NonFlightDayRowContent({ day }: { day: NonFlightDay }) {
+  const year = day.year || DEFAULT_ALLOWANCE_YEAR;
+  const domesticRates = getDomesticRates(year);
+  
   return (
     <>
       <td className="py-2 px-2">
@@ -256,8 +261,8 @@ function NonFlightDayRowContent({ day }: { day: NonFlightDay }) {
       </td>
       <td className="py-2 px-2 text-right text-slate-600 dark:text-slate-400">
         {day.country
-          ? formatCurrency(getCountryAllowance(day.country).rate24h)
-          : formatCurrency(DOMESTIC_RATES.RATE_24H)}
+          ? formatCurrency(getCountryAllowance(day.country, year).rate24h)
+          : formatCurrency(domesticRates.RATE_24H)}
       </td>
     </>
   );

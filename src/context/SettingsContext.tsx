@@ -4,8 +4,8 @@ import type { Settings } from '../types';
 // Default settings
 const DEFAULT_SETTINGS: Settings = {
   distanceToWork: 30,
-  cleaningCostPerDay: 1.0,
-  tipPerNight: 1.0,
+  cleaningCostPerDay: 1.6,
+  tipPerNight: 3.6,
   countOnlyAFlag: false,
   countMedicalAsTrip: true,
   countGroundDutyAsTrip: true,

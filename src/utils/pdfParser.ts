@@ -414,21 +414,53 @@ export async function parseStreckeneinsatzPDF(file: File): Promise<{
     }
   }
   
-  // Extract tax-free reimbursement amount
-  // Look for patterns like "steuerfreie Erstattung: 123,45 €" or "Steuerfrei: 123.45"
-  const reimbursementPatterns = [
-    /steuerfrei[e\s]*(?:Erstattung)?[:\s]*(\d+[.,]\d{2})/i,
-    /Erstattung[:\s]*(\d+[.,]\d{2})/i,
-    /Verpflegung[:\s]*(\d+[.,]\d{2})/i,
-  ];
+  // Extract tax-free reimbursement amount from the "Summe" line
+  // The Streckeneinsatzabrechnung has a "Summe" line at the bottom with columns:
+  // Format with 3 columns: Summe: [Total] [Werbko] [Steuer]
+  // Format with 2 columns: Summe: [Total] [Steuer]
+  // Tax-free amount = Total - Werbko - Steuer
   
   let taxFreeReimbursement = 0;
-  for (const pattern of reimbursementPatterns) {
-    const match = fullText.match(pattern);
-    if (match) {
-      taxFreeReimbursement = parseFloat(match[1].replace(',', '.'));
-      break;
+  
+  // Match the Summe line - can have 2 or 3 number columns
+  // Handle both German number formats: 1.234,56 and 1234,56
+  const summeMatch = fullText.match(/Summe:\s*([\d.,]+)\s+([\d.,]+)(?:\s+([\d.,]+))?/);
+  
+  if (summeMatch) {
+    // Parse numbers, handling German format (comma as decimal separator, dot as thousands separator)
+    const parseGermanNumber = (str: string): number => {
+      if (!str) return 0;
+      // Remove thousands separators (dots) and replace decimal comma with dot
+      const normalized = str.replace(/\./g, '').replace(',', '.');
+      return parseFloat(normalized);
+    };
+    
+    const value1 = parseGermanNumber(summeMatch[1]);
+    const value2 = parseGermanNumber(summeMatch[2]);
+    const value3 = summeMatch[3] ? parseGermanNumber(summeMatch[3]) : null;
+    
+    let docTotal: number;
+    let docWerbko: number;
+    let docSteuer: number;
+    
+    if (value3 !== null) {
+      // 3 columns: Total, Werbko, Steuer
+      docTotal = value1;
+      docWerbko = value2;
+      docSteuer = value3;
+    } else {
+      // 2 columns: Total, Steuer
+      docTotal = value1;
+      docWerbko = 0;
+      docSteuer = value2;
     }
+    
+    // Tax-free = Total - Werbko - Steuer
+    taxFreeReimbursement = docTotal - docWerbko - docSteuer;
+    
+    console.log(`Streckeneinsatzabrechnung parsed: Total=${docTotal}, Werbko=${docWerbko}, Steuer=${docSteuer}, TaxFree=${taxFreeReimbursement}`);
+  } else {
+    console.warn('Could not find Summe line in Streckeneinsatzabrechnung');
   }
   
   // Extract day counts if available
