@@ -27,6 +27,7 @@ export const AIRPORT_COUNTRIES: Record<string, string> = {
   RLG: 'DE', // Rostock
   GWT: 'DE', // Sylt
   BRE: 'DE', // Bremen
+  IGS: 'DE', // Ingolstadt
 
   // Austria (AT)
   VIE: 'AT', // Vienna
@@ -177,8 +178,23 @@ export const AIRPORT_COUNTRIES: Record<string, string> = {
   PRG: 'CZ', // Prague
   BRQ: 'CZ', // Brno
 
+  // Slovakia (SK)
+  BTS: 'SK', // Bratislava
+
   // Hungary (HU)
   BUD: 'HU', // Budapest
+
+  // Estonia (EE)
+  TLL: 'EE', // Tallinn
+
+  // Latvia (LV)
+  RIX: 'LV', // Riga
+
+  // Lithuania (LT)
+  VNO: 'LT', // Vilnius
+
+  // Moldova (MD)
+  KIV: 'MD', // Chisinau
 
   // Romania (RO)
   OTP: 'RO', // Bucharest
@@ -251,6 +267,7 @@ export const AIRPORT_COUNTRIES: Record<string, string> = {
   KBP: 'UA', // Kyiv Boryspil
   IEV: 'UA', // Kyiv Zhuliany
   ODS: 'UA', // Odessa
+  LWO: 'UA', // Lviv
 
   // Middle East
   DXB: 'AE', // Dubai
@@ -262,9 +279,13 @@ export const AIRPORT_COUNTRIES: Record<string, string> = {
   MCT: 'OM', // Muscat
   JED: 'SA', // Jeddah
   RUH: 'SA', // Riyadh
+  DMM: 'SA', // Dammam
   TLV: 'IL', // Tel Aviv
   AMM: 'JO', // Amman
   BEY: 'LB', // Beirut
+  BGW: 'IQ', // Baghdad
+  EBL: 'IQ', // Erbil
+  IKA: 'IR', // Tehran
   CAI: 'EG', // Cairo
   HRG: 'EG', // Hurghada
   SSH: 'EG', // Sharm El Sheikh
@@ -283,11 +304,15 @@ export const AIRPORT_COUNTRIES: Record<string, string> = {
   CPT: 'ZA', // Cape Town
   DUR: 'ZA', // Durban
   LOS: 'NG', // Lagos
+  ABV: 'NG', // Abuja
   ABJ: 'CI', // Abidjan
   ACC: 'GH', // Accra
   DAR: 'TZ', // Dar es Salaam
   MRU: 'MU', // Mauritius
   SEZ: 'SC', // Seychelles
+  WDH: 'NA', // Windhoek
+  LAD: 'AO', // Luanda
+  SSG: 'GQ', // Malabo
 
   // Asia
   PEK: 'CN', // Beijing
@@ -316,6 +341,8 @@ export const AIRPORT_COUNTRIES: Record<string, string> = {
   BOM: 'IN', // Mumbai
   BLR: 'IN', // Bangalore
   MAA: 'IN', // Chennai
+  CCU: 'IN', // Kolkata
+  HYD: 'IN', // Hyderabad
   CMB: 'LK', // Colombo
   MLE: 'MV', // Maldives
   KTM: 'NP', // Kathmandu
@@ -353,6 +380,9 @@ export const AIRPORT_COUNTRIES: Record<string, string> = {
   MCO: 'US', // Orlando
   DTW: 'US', // Detroit
   MSP: 'US', // Minneapolis
+  CLT: 'US', // Charlotte
+  STL: 'US', // St. Louis
+  AUS: 'US', // Austin
   YYZ: 'CA', // Toronto
   YVR: 'CA', // Vancouver
   YUL: 'CA', // Montreal
@@ -481,6 +511,11 @@ export function getCountryName(countryCode: string): string {
     MT: 'Malta',
     RU: 'Russland',
     UA: 'Ukraine',
+    EE: 'Estland',
+    LV: 'Lettland',
+    LT: 'Litauen',
+    SK: 'Slowakei',
+    MD: 'Moldawien',
     AE: 'Vereinigte Arabische Emirate',
     QA: 'Katar',
     BH: 'Bahrain',
@@ -490,6 +525,8 @@ export function getCountryName(countryCode: string): string {
     IL: 'Israel',
     JO: 'Jordanien',
     LB: 'Libanon',
+    IQ: 'Irak',
+    IR: 'Iran',
     EG: 'Ägypten',
     MA: 'Marokko',
     TN: 'Tunesien',
@@ -498,6 +535,14 @@ export function getCountryName(countryCode: string): string {
     ET: 'Äthiopien',
     ZA: 'Südafrika',
     NG: 'Nigeria',
+    CI: 'Côte d\'Ivoire',
+    GH: 'Ghana',
+    TZ: 'Tansania',
+    MU: 'Mauritius',
+    SC: 'Seychellen',
+    NA: 'Namibia',
+    AO: 'Angola',
+    GQ: 'Äquatorialguinea',
     CN: 'China',
     HK: 'Hongkong',
     TW: 'Taiwan',
@@ -513,6 +558,13 @@ export function getCountryName(countryCode: string): string {
     IN: 'Indien',
     LK: 'Sri Lanka',
     MV: 'Malediven',
+    PK: 'Pakistan',
+    BD: 'Bangladesch',
+    NP: 'Nepal',
+    UZ: 'Usbekistan',
+    GE: 'Georgien',
+    AM: 'Armenien',
+    AZ: 'Aserbaidschan',
     US: 'USA',
     CA: 'Kanada',
     MX: 'Mexiko',
