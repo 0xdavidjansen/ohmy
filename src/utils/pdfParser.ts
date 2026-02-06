@@ -25,6 +25,29 @@ function parseAndValidateDate(year: number, month: number, day: number): Date | 
   return date;
 }
 
+function parseMonthYearFromFilename(fileName: string): { year: number; month: number } | null {
+  const yearFirstMatch = fileName.match(/(\d{4})[_-](\d{1,2})/);
+  if (yearFirstMatch) {
+    const year = parseInt(yearFirstMatch[1], 10);
+    const month = parseInt(yearFirstMatch[2], 10);
+    if (year >= 2020 && year <= 2030 && month >= 1 && month <= 12) {
+      return { year, month };
+    }
+  }
+
+  const monthFirstMatch = fileName.match(/(\d{1,2})[_-](\d{4})/);
+  if (monthFirstMatch) {
+    const month = parseInt(monthFirstMatch[1], 10);
+    const year = parseInt(monthFirstMatch[2], 10);
+    if (year >= 2020 && year <= 2030 && month >= 1 && month <= 12) {
+      return { year, month };
+    }
+  }
+
+  return null;
+}
+
+
 // Lazy load PDF.js for code splitting
 let pdfjsLib: typeof import('pdfjs-dist') | null = null;
 
@@ -96,55 +119,62 @@ export async function parseFlugstundenPDF(file: File): Promise<{
   // PDF format: "Monat 01 / 2025" or "Monat 1 / 2025"
   let year = new Date().getFullYear();
   let month = 1;
-  
-  // Try to find month/year in document header/title area (first 500 chars)
-  const headerText = fullText.slice(0, 500);
-  
-  // First try to find "Monat XX / YYYY" pattern (numeric month/year format)
-  const monatPattern = /Monat\s*(\d{1,2})\s*\/\s*(\d{4})/i;
-  const monatMatch = headerText.match(monatPattern);
-  if (monatMatch) {
-    const extractedMonth = parseInt(monatMatch[1], 10);
-    const extractedYear = parseInt(monatMatch[2], 10);
-    if (extractedMonth >= 1 && extractedMonth <= 12) {
-      month = extractedMonth;
-    }
-    if (extractedYear >= 2020 && extractedYear <= 2030) {
-      year = extractedYear;
-    }
+
+  const filenameDate = parseMonthYearFromFilename(fileName);
+  if (filenameDate) {
+    year = filenameDate.year;
+    month = filenameDate.month;
   } else {
-    // Fall back to German month names
-    const monthNames = ['januar', 'februar', 'märz', 'april', 'mai', 'juni', 
-      'juli', 'august', 'september', 'oktober', 'november', 'dezember'];
-    
-    for (let i = 0; i < monthNames.length; i++) {
-      const pattern = new RegExp(`\\b${monthNames[i]}\\b`, 'i');
-      if (pattern.test(headerText)) {
-        month = i + 1;
-        break;
-      }
-    }
-    
-    // Try to find a reasonable year (2020-2030) in the header
-    const yearPattern = /\b(20[2-3]\d)\b/;
-    const yearMatch = headerText.match(yearPattern);
-    if (yearMatch) {
-      year = parseInt(yearMatch[1], 10);
-    }
-  }
-  
-  // If still not found, try to extract from first flight date (DD.MM. format)
-  if (month === 1) {
-    // Look for flight dates in format "DD.MM." at the start of lines
-    const datePattern = /(?:^|\n)(\d{2})\.(\d{2})\./;
-    const dateMatch = fullText.match(datePattern);
-    if (dateMatch) {
-      const extractedMonth = parseInt(dateMatch[2], 10);
+    // Try to find month/year in document header/title area (first 500 chars)
+    const headerText = fullText.slice(0, 500);
+
+    // First try to find "Monat XX / YYYY" pattern (numeric month/year format)
+    const monatPattern = /Monat\s*(\d{1,2})\s*\/\s*(\d{4})/i;
+    const monatMatch = headerText.match(monatPattern);
+    if (monatMatch) {
+      const extractedMonth = parseInt(monatMatch[1], 10);
+      const extractedYear = parseInt(monatMatch[2], 10);
       if (extractedMonth >= 1 && extractedMonth <= 12) {
         month = extractedMonth;
       }
+      if (extractedYear >= 2020 && extractedYear <= 2030) {
+        year = extractedYear;
+      }
+    } else {
+      // Fall back to German month names
+      const monthNames = ['januar', 'februar', 'märz', 'april', 'mai', 'juni',
+        'juli', 'august', 'september', 'oktober', 'november', 'dezember'];
+
+      for (let i = 0; i < monthNames.length; i++) {
+        const pattern = new RegExp(`\\b${monthNames[i]}\\b`, 'i');
+        if (pattern.test(headerText)) {
+          month = i + 1;
+          break;
+        }
+      }
+
+      // Try to find a reasonable year (2020-2030) in the header
+      const yearPattern = /\b(20[2-3]\d)\b/;
+      const yearMatch = headerText.match(yearPattern);
+      if (yearMatch) {
+        year = parseInt(yearMatch[1], 10);
+      }
+    }
+
+    // If still not found, try to extract from first flight date (DD.MM. format)
+    if (month === 1) {
+      // Look for flight dates in format "DD.MM." at the start of lines
+      const datePattern = /(?:^|\n)(\d{2})\.(\d{2})\./;
+      const dateMatch = fullText.match(datePattern);
+      if (dateMatch) {
+        const extractedMonth = parseInt(dateMatch[2], 10);
+        if (extractedMonth >= 1 && extractedMonth <= 12) {
+          month = extractedMonth;
+        }
+      }
     }
   }
+
   
   // Parse flight entries
   // Actual PDF format from Lufthansa Flugstundenübersicht:
@@ -364,23 +394,15 @@ export async function parseStreckeneinsatzPDF(file: File): Promise<{
   // For Streckeneinsatzabrechnung, the month/year is typically in the filename (e.g., "2025-01.pdf")
   let year = new Date().getFullYear();
   let month = 1;
-  
-  // First try to extract from filename (format: "YYYY-MM" or "YYYY-M")
-  const filenamePattern = /(\d{4})-(\d{1,2})/;
-  const filenameMatch = fileName.match(filenamePattern);
-  if (filenameMatch) {
-    const extractedYear = parseInt(filenameMatch[1], 10);
-    const extractedMonth = parseInt(filenameMatch[2], 10);
-    if (extractedYear >= 2020 && extractedYear <= 2030) {
-      year = extractedYear;
-    }
-    if (extractedMonth >= 1 && extractedMonth <= 12) {
-      month = extractedMonth;
-    }
+
+  const filenameDate = parseMonthYearFromFilename(fileName);
+  if (filenameDate) {
+    year = filenameDate.year;
+    month = filenameDate.month;
   } else {
     // Fall back to searching in document text
     const headerText = fullText.slice(0, 500);
-    
+
     // Try to find "Monat XX / YYYY" pattern
     const monatPattern = /Monat\s*(\d{1,2})\s*\/\s*(\d{4})/i;
     const monatMatch = headerText.match(monatPattern);
@@ -395,16 +417,16 @@ export async function parseStreckeneinsatzPDF(file: File): Promise<{
       }
     } else {
       // Fall back to German month names
-      const monthNames = ['januar', 'februar', 'märz', 'april', 'mai', 'juni', 
+      const monthNames = ['januar', 'februar', 'märz', 'april', 'mai', 'juni',
         'juli', 'august', 'september', 'oktober', 'november', 'dezember'];
-      
+
       for (let i = 0; i < monthNames.length; i++) {
         if (fullText.toLowerCase().includes(monthNames[i])) {
           month = i + 1;
           break;
         }
       }
-      
+
       // Try to find a reasonable year (2020-2030) in the header
       const yearPattern = /\b(20[2-3]\d)\b/;
       const yearMatch = headerText.match(yearPattern);
@@ -413,6 +435,7 @@ export async function parseStreckeneinsatzPDF(file: File): Promise<{
       }
     }
   }
+
   
   // Extract tax-free reimbursement amount from the "Summe" line
   // The Streckeneinsatzabrechnung has a "Summe" line at the bottom with columns:
@@ -675,7 +698,7 @@ export function checkDuplicateFile(
       type: 'duplicate_file',
       severity: 'warning',
       message: `Dokument für ${newFile.type === 'flugstunden' ? 'Flugstunden' : 'Streckeneinsatz'} ${newFile.month}/${newFile.year} bereits vorhanden`,
-      details: `Die Datei "${newFile.name}" überschreibt die bestehende Datei "${duplicate.name}".`,
+      details: `Die Datei "${newFile.name}" wurde bereits hochgeladen.`,
       dismissible: true,
     };
   }

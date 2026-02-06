@@ -97,9 +97,9 @@ function AppContextInner({ children }: { children: React.ReactNode }) {
           const result = await parseFlugstundenPDF(file);
 
           // Check for duplicates
-          const dupWarning = checkDuplicateFile(result.fileInfo, flightState.uploadedFiles);
-          if (dupWarning) {
-            addWarnings([dupWarning]);
+          const duplicateWarning = checkDuplicateFile(result.fileInfo, flightState.uploadedFiles);
+          if (duplicateWarning) {
+            addWarnings([duplicateWarning]);
           }
 
           if (result.personalInfo) {
@@ -112,9 +112,9 @@ function AppContextInner({ children }: { children: React.ReactNode }) {
         } else {
           const result = await parseStreckeneinsatzPDF(file);
 
-          const dupWarning = checkDuplicateFile(result.fileInfo, flightState.uploadedFiles);
-          if (dupWarning) {
-            addWarnings([dupWarning]);
+          const duplicateWarning = checkDuplicateFile(result.fileInfo, flightState.uploadedFiles);
+          if (duplicateWarning) {
+            addWarnings([duplicateWarning]);
           }
 
           addReimbursementData(result.reimbursementData);

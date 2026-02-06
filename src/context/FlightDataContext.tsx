@@ -67,8 +67,12 @@ function flightDataReducer(state: FlightDataState, action: FlightDataAction): Fl
       );
       return { ...state, reimbursementData: [...filtered, action.payload] };
     }
-    case 'ADD_UPLOADED_FILE':
-      return { ...state, uploadedFiles: [...state.uploadedFiles, action.payload] };
+    case 'ADD_UPLOADED_FILE': {
+      const filtered = state.uploadedFiles.filter(
+        (f) => !(f.type === action.payload.type && f.month === action.payload.month && f.year === action.payload.year)
+      );
+      return { ...state, uploadedFiles: [...filtered, action.payload] };
+    }
     case 'ADD_WARNINGS': {
       const existingWarningIds = new Set(state.warnings.map((w) => w.id));
       const newWarnings = action.payload.filter((w) => !existingWarningIds.has(w.id));
