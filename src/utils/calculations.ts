@@ -488,7 +488,8 @@ export function calculateMonthlyBreakdown(
     const hotelNights = detectHotelNights(data.flights);
     
     // Meal allowance (simplified - full calculation needs trip detection)
-    const mealResult = calculateMealAllowances(data.flights, data.nonFlightDays, year);
+    const allowanceYear = year as AllowanceYear;
+    const mealResult = calculateMealAllowances(data.flights, data.nonFlightDays, allowanceYear);
     
     // Employer reimbursement for this month
     const monthlyReimbursement = reimbursementData
@@ -541,7 +542,7 @@ export function calculateTaxDeduction(
   const trips = countTrips(flights, nonFlightDays, settings);
   
   // Meal allowances - use year from first flight or default
-  const year = flights.length > 0 ? flights[0].year : DEFAULT_ALLOWANCE_YEAR;
+  const year = (flights.length > 0 ? flights[0].year : DEFAULT_ALLOWANCE_YEAR) as AllowanceYear;
   const distanceResult = calculateDistanceDeduction(trips, settings.distanceToWork, year);
   const mealResult = calculateMealAllowances(flights, nonFlightDays, year);
   

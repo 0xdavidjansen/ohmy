@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { Flight, NonFlightDay } from '../types';
+import type { AllowanceYear, Flight, NonFlightDay } from '../types';
 import { DUTY_CODES } from '../constants';
 import { getCountryName } from '../utils/airports';
 import { formatCurrency } from '../utils/calculations';
@@ -145,7 +145,7 @@ function FlightRow({ flight }: { flight: Flight }) {
 
 function FlightRowContent({ flight }: { flight: Flight }) {
   const countryCode = flight.country;
-  const year = flight.year || DEFAULT_ALLOWANCE_YEAR;
+  const year = (flight.year || DEFAULT_ALLOWANCE_YEAR) as AllowanceYear;
   const domesticRates = getDomesticRates(year);
   const allowance =
     countryCode === 'DE'
@@ -224,7 +224,7 @@ function NonFlightDayRow({ day }: { day: NonFlightDay }) {
 }
 
 function NonFlightDayRowContent({ day }: { day: NonFlightDay }) {
-  const year = day.year || DEFAULT_ALLOWANCE_YEAR;
+  const year = (day.year || DEFAULT_ALLOWANCE_YEAR) as AllowanceYear;
   const domesticRates = getDomesticRates(year);
   
   return (
